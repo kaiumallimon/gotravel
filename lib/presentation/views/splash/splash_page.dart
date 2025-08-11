@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gotravel/core/constants/app_assets.dart';
 
 class SplashPage extends StatefulWidget {
@@ -12,20 +13,18 @@ class SplashPage extends StatefulWidget {
 
 class _SplashPageState extends State<SplashPage>
     with SingleTickerProviderStateMixin {
-  
   /// Animation controller for the splash screen animations
   /// Controls the fade and scale animations
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
 
-
   /// Initializes the animation controller and animations
   /// This method is called when the widget is inserted into the widget tree.
   @override
   void initState() {
     super.initState();
-    
+
     /// Create the animation controller
     _controller = AnimationController(
       vsync: this,
@@ -43,8 +42,14 @@ class _SplashPageState extends State<SplashPage>
 
     /// Start the animations
     _controller.forward();
-  }
 
+    /// after 2 seconds, navigate to the welcome page
+    Future.delayed(const Duration(seconds: 2), () {
+      if (context.mounted) {
+        GoRouter.of(context).go('/welcome');
+      }
+    });
+  }
 
   /// Disposes the animation controller
   @override

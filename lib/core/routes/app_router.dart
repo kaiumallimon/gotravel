@@ -1,17 +1,51 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gotravel/core/routes/app_routes.dart';
 import 'package:gotravel/presentation/views/splash/splash_page.dart';
+import 'package:gotravel/presentation/views/welcome/welcome_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: AppRoutes.splash,
     routes: [
+      /// Splash route with custom slide transition
       GoRoute(
         path: AppRoutes.splash,
-        builder: (context, state) {
-          return const SplashPage();
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const SplashPage(),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+
+      /// Welcome route with custom slide transition
+      GoRoute(
+        path: AppRoutes.welcome,
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const WelcomePage(),
+            transitionsBuilder: _slideTransition,
+          );
         },
       ),
     ],
   );
+
+  static Widget _slideTransition(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+  return CupertinoPageTransition(
+    primaryRouteAnimation: animation,
+    secondaryRouteAnimation: secondaryAnimation,
+    linearTransition: true,
+    child: child,
+  );
+}
 }
