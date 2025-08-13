@@ -5,6 +5,9 @@ import 'package:gotravel/core/routes/app_routes.dart';
 import 'package:gotravel/presentation/views/splash/splash_page.dart';
 import 'package:gotravel/presentation/views/welcome/welcome_page.dart';
 
+import 'package:gotravel/presentation/views/auth/sign_in_page.dart';
+import 'package:gotravel/presentation/views/auth/sign_up_page.dart';
+
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: AppRoutes.splash,
@@ -32,6 +35,30 @@ class AppRouter {
           );
         },
       ),
+
+      /// Sign In route
+      GoRoute(
+        path: AppRoutes.login,
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const SignInPage(),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+
+      /// Sign Up route
+      GoRoute(
+        path: AppRoutes.register,
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const SignUpPage(),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
     ],
   );
 
@@ -41,11 +68,11 @@ class AppRouter {
     Animation<double> secondaryAnimation,
     Widget child,
   ) {
-  return CupertinoPageTransition(
-    primaryRouteAnimation: animation,
-    secondaryRouteAnimation: secondaryAnimation,
-    linearTransition: true,
-    child: child,
-  );
-}
+    return CupertinoPageTransition(
+      primaryRouteAnimation: animation,
+      secondaryRouteAnimation: secondaryAnimation,
+      linearTransition: true,
+      child: child,
+    );
+  }
 }

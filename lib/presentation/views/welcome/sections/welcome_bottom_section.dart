@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gotravel/core/routes/app_routes.dart';
 import 'package:gotravel/presentation/providers/welcome_viewmodel.dart';
 import 'package:gotravel/presentation/widgets/custom_button.dart';
 
@@ -76,7 +78,7 @@ class WelcomeBottomSection extends StatelessWidget {
                   onPressed: () {
                     if (currentIndex ==
                         welcomeProvider.welcomeData!.length - 1) {
-                      // Navigate to main app
+                      context.go(AppRoutes.login);
                     } else {
                       pageController.nextPage(
                         duration: const Duration(milliseconds: 300),

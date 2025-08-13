@@ -1,5 +1,7 @@
 import 'package:blur/blur.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:gotravel/core/routes/app_routes.dart';
 
 class WelcomeCardSection extends StatelessWidget {
   final dynamic data;
@@ -171,6 +173,7 @@ class WelcomeCardSection extends StatelessWidget {
                       TextButton(
                         onPressed: () {
                           // Navigate to main app
+                          context.go(AppRoutes.login);
                         },
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
