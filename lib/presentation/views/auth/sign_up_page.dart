@@ -22,6 +22,7 @@ class _SignUpPageState extends State<SignUpPage> {
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -170,6 +171,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                   'Sign In',
                                   style: TextStyle(
                                     color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
