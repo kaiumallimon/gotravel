@@ -20,11 +20,11 @@ class SupabaseAuthService {
 
   /// Sign up with email, password, and full name
   /// Also inserts into `public.users` table
-  Future<AuthResponse?> signUp(
-    String email,
-    String password,
-    String fullName,
-  ) async {
+  Future<AuthResponse?> signUp({
+    required String email,
+    required String password,
+    required String fullName,
+  }) async {
     try {
       // 1. Create the user in Supabase Auth
       final response = await _supabase.auth.signUp(
@@ -41,7 +41,7 @@ class SupabaseAuthService {
           'email': email,
           'role': 'user', // default role
           // Extra field example:
-          'full_name': fullName,
+          'name': fullName,
         });
       }
       return response;

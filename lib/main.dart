@@ -6,17 +6,27 @@ import 'package:gotravel/presentation/providers/sign_up_provider.dart';
 import 'package:gotravel/theming/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() async {
-  /// Ensure flutter bindings are initialized
+Future<void> main() async {
+  /// Ensure Flutter bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
 
-  /// Initialize hive
+  /// Initialize Hive
   await Hive.initFlutter();
-  // Open the box
   await Hive.openBox('welcome');
 
-  /// Run the app(root)
+  /// Load environment variables
+  await dotenv.load(fileName: ".env");
+
+  /// Initialize Supabase
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANONKEY']!,
+  );
+
+  /// Run the app
   runApp(const MyApp());
 }
 

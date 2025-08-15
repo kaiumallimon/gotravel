@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class CustomButton extends StatelessWidget {
@@ -10,6 +11,8 @@ class CustomButton extends StatelessWidget {
     this.fgColor,
     this.onPressed,
     this.isOutlined = false,
+    this.isLoading = false,
+    this.loadingText = 'Please wait',
   });
 
   final double height;
@@ -19,6 +22,8 @@ class CustomButton extends StatelessWidget {
   final Color? fgColor;
   final VoidCallback? onPressed;
   final bool isOutlined;
+  final bool isLoading;
+  final String loadingText;
 
   @override
   Widget build(BuildContext context) {
@@ -59,13 +64,29 @@ class CustomButton extends StatelessWidget {
                 ),
               ),
               child: Center(
-                child: Text(
-                  text,
-                  style: TextStyle(
-                    fontFamily: 'Geist',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: isLoading
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CupertinoActivityIndicator(color: Colors.white),
+                          const SizedBox(width: 12),
+                          Text(
+                            loadingText,
+                            style: TextStyle(
+                              fontFamily: 'Geist',
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Text(
+                        text,
+                        style: TextStyle(
+                          fontFamily: 'Geist',
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
             ),
     );
