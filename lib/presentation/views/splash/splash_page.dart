@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gotravel/core/constants/app_assets.dart';
+import 'package:gotravel/core/routes/app_routes.dart';
+import 'package:gotravel/data/services/local/hive_service.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -46,7 +48,7 @@ class _SplashPageState extends State<SplashPage>
     /// after 2 seconds, navigate to the welcome page
     Future.delayed(const Duration(seconds: 2), () {
       if (context.mounted) {
-        GoRouter.of(context).go('/welcome');
+        navigate(context);
       }
     });
   }
@@ -56,6 +58,23 @@ class _SplashPageState extends State<SplashPage>
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  void navigate(BuildContext context) {
+    // Retrieve value from Hive
+    final hasSeen = HiveService.getData(
+      'welcome',
+      'hasSeen',
+      defaultValue: false,
+    );
+
+    if (hasSeen == true) {
+      // Navigate to login if already seen welcome
+      context.go(AppRoutes.login);
+    } else {
+      // Navigate to welcome screen if not seen
+      context.go(AppRoutes.welcome);
+    }
   }
 
   @override

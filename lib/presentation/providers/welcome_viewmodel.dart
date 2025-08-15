@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gotravel/core/constants/app_data.dart';
+import 'package:gotravel/core/routes/app_routes.dart';
 import 'package:gotravel/data/models/welcome_model.dart';
+import 'package:gotravel/data/services/local/hive_service.dart';
 
 class WelcomeProvider extends ChangeNotifier {
   /// Welcome data list
@@ -62,5 +65,10 @@ class WelcomeProvider extends ChangeNotifier {
     } catch (e) {
       setError('Failed to load welcome data: $e');
     }
+  }
+
+  void getStartedOrSkip(BuildContext context) {
+    HiveService.saveData('welcome', 'hasSeen', true);
+    context.go(AppRoutes.login);
   }
 }

@@ -78,7 +78,7 @@ class WelcomeBottomSection extends StatelessWidget {
                   onPressed: () {
                     if (currentIndex ==
                         welcomeProvider.welcomeData!.length - 1) {
-                      context.go(AppRoutes.login);
+                      welcomeProvider.getStartedOrSkip(context);
                     } else {
                       pageController.nextPage(
                         duration: const Duration(milliseconds: 300),
