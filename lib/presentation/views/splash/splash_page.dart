@@ -68,12 +68,29 @@ class _SplashPageState extends State<SplashPage>
       defaultValue: false,
     );
 
-    if (hasSeen == true) {
-      // Navigate to login if already seen welcome
-      context.go(AppRoutes.login);
+    /*HiveService.openBox('user');
+      HiveService.saveData('user', 'accountData', response);
+      context.push(AppRoutes.home);*/
+
+    final userData = HiveService.getData(
+      'user',
+      'accountData',
+      defaultValue: null,
+    );
+
+    // Check if user data exists
+    if (userData != null && userData['id'] != null) {
+      // Navigate to home if user data exists
+      context.go(AppRoutes.home);
+      return;
     } else {
-      // Navigate to welcome screen if not seen
-      context.go(AppRoutes.welcome);
+      if (hasSeen == true) {
+        // Navigate to login if already seen welcome
+        context.go(AppRoutes.login);
+      } else {
+        // Navigate to welcome screen if not seen
+        context.go(AppRoutes.welcome);
+      }
     }
   }
 

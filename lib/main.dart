@@ -16,6 +16,7 @@ Future<void> main() async {
   /// Initialize Hive
   await Hive.initFlutter();
   await Hive.openBox('welcome');
+  await Hive.openBox('user');
 
   /// Load environment variables
   await dotenv.load(fileName: ".env");

@@ -5,13 +5,29 @@ class SupabaseAuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
   /// Sign in with email & password
-  Future<AuthResponse?> signIn(String email, String password) async {
+  Future<Map<String, dynamic>?> signIn(String email, String password) async {
     try {
+      // 1. Sign in
       final response = await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
       );
-      return response;
+
+      if (response.user == null) {
+        debugPrint('Sign in failed: no user returned');
+        return null;
+      }
+
+      final userId = response.user!.id;
+
+      // 2. Fetch user data from `users` table
+      final userData = await _supabase
+          .from('users')
+          .select()
+          .eq('id', userId)
+          .single();
+
+      return userData;
     } catch (e) {
       debugPrint('Sign in error: $e');
       rethrow;
@@ -36,13 +52,13 @@ class SupabaseAuthService {
         final userId = response.user!.id;
 
         // 2. Insert into `public.users` table
-        await _supabase.from('users').insert({
+        await _supabase.from('users').upsert({
           'id': userId,
           'email': email,
-          'role': 'user', // default role
-          // Extra field example:
+          'role': 'user',
           'name': fullName,
         });
+
       }
       return response;
     } catch (e) {

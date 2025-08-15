@@ -127,33 +127,16 @@ class _SignInPageState extends State<SignInPage> {
                           ),
                           const SizedBox(height: 24),
                           CustomButton(
-                            text: provider.isLoading
-                                ? 'Signing In...'
-                                : 'Sign In',
+                            text: 'Sign In',
                             height: 50,
                             width: double.infinity,
-                            onPressed: provider.isLoading
-                                ? null
-                                : () {
-                                    if (_formKey.currentState!.validate()) {
-                                      provider.setLoading(true);
-                                      Future.delayed(
-                                        const Duration(seconds: 1),
-                                        () {
-                                          provider.setLoading(false);
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'Signed in (mock)!',
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    }
-                                  },
+                            isLoading: provider.isLoading,
+                            loadingText: "Signing In...",
+                            onPressed: ()async{
+                              if (_formKey.currentState?.validate() ?? false) {
+                                await provider.signIn(context);
+                              }
+                            },
                           ),
                           const SizedBox(height: 20),
                           Row(
