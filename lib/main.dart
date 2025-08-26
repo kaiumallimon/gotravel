@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gotravel/core/routes/app_router.dart';
+import 'package:gotravel/presentation/providers/admin_wrapper_provider.dart';
 import 'package:gotravel/presentation/providers/welcome_viewmodel.dart';
 import 'package:gotravel/presentation/providers/sign_in_provider.dart';
 import 'package:gotravel/presentation/providers/sign_up_provider.dart';
@@ -46,6 +47,10 @@ class MyApp extends StatelessWidget {
 
         /// Sign-Up Provider
         ChangeNotifierProvider(create: (context) => SignUpProvider()),
+
+
+        /// Admin-wrapper-provider
+        ChangeNotifierProvider(create: (context) => AdminWrapperProvider()),
       ],
       child: MaterialApp.router(
         title: 'GoTravel',
