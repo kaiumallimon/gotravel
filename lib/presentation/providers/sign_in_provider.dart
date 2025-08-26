@@ -41,7 +41,7 @@ class SignInProvider extends ChangeNotifier {
         password,
       );
 
-      if (response==null || response['id'] == null) {
+      if (response==null || response.id == null) {
         _showError(context, "Something went wrong, Please try again later!");
         service.signOut();
         return;
@@ -50,8 +50,10 @@ class SignInProvider extends ChangeNotifier {
       clearAllControllers();
       // Store user data in a local storage:
 
-      HiveService.saveData('user', 'accountData', response);
-      context.push(AppRoutes.home);
+      HiveService.saveData('user', 'accountData', response.toJson());
+      response.role == 'admin'
+          ? context.go(AppRoutes.adminWrapper)
+          : context.go(AppRoutes.userWrapper);
     } catch (error) {
       _showError(context, error.toString());
     } finally {

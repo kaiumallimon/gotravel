@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gotravel/core/routes/app_routes.dart';
+import 'package:gotravel/presentation/views/admin/admin_wrapper.dart';
 import 'package:gotravel/presentation/views/splash/splash_page.dart';
 import 'package:gotravel/presentation/views/user/user_wrapper.dart';
 import 'package:gotravel/presentation/views/welcome/welcome_page.dart';
@@ -63,11 +64,23 @@ class AppRouter {
 
       /// Home route
       GoRoute(
-        path: AppRoutes.home,
+        path: AppRoutes.userWrapper,
         pageBuilder: (context, state) {
           return CustomTransitionPage(
             key: state.pageKey,
             child: const UserWrapper(),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+
+      /// Admin route
+      GoRoute(
+        path: AppRoutes.adminWrapper,
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const AdminWrapper(),
             transitionsBuilder: _slideTransition,
           );
         },

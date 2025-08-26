@@ -1,11 +1,12 @@
 import 'package:flutter/widgets.dart';
+import 'package:gotravel/data/models/user_account.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseAuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
   /// Sign in with email & password
-  Future<Map<String, dynamic>?> signIn(String email, String password) async {
+  Future<UserAccountModel?> signIn(String email, String password) async {
     try {
       // 1. Sign in
       final response = await _supabase.auth.signInWithPassword(
@@ -27,7 +28,7 @@ class SupabaseAuthService {
           .eq('id', userId)
           .single();
 
-      return userData;
+      return UserAccountModel.fromJson(userData);
     } catch (e) {
       debugPrint('Sign in error: $e');
       rethrow;

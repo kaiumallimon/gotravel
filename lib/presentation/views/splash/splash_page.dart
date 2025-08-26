@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gotravel/core/constants/app_assets.dart';
 import 'package:gotravel/core/routes/app_routes.dart';
+import 'package:gotravel/data/models/user_account.dart';
 import 'package:gotravel/data/services/local/hive_service.dart';
 
 class SplashPage extends StatefulWidget {
@@ -78,10 +79,18 @@ class _SplashPageState extends State<SplashPage>
       defaultValue: null,
     );
 
+    // print(userData);
+
+    final userDataModel = userData==null? null: UserAccountModel.fromJson(userData);
+
     // Check if user data exists
-    if (userData != null && userData['id'] != null) {
+    if (userDataModel !=null && userDataModel.id != null) {
       // Navigate to home if user data exists
-      context.go(AppRoutes.home);
+      if (userDataModel.role == 'admin') {
+        context.go(AppRoutes.adminWrapper);
+      } else {
+        context.go(AppRoutes.userWrapper);
+      }
       return;
     } else {
       if (hasSeen == true) {
