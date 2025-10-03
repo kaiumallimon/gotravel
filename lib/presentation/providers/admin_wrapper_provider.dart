@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gotravel/data/models/user_account.dart';
 import 'package:gotravel/data/services/local/hive_service.dart';
+import 'package:gotravel/presentation/views/admin/hotels/pages/hotels_page.dart';
 
 class AdminWrapperProvider extends ChangeNotifier {
   UserAccountModel? _accountData;
@@ -27,8 +28,6 @@ class AdminWrapperProvider extends ChangeNotifier {
   final List<Map<String, dynamic>> tabs = [
     {"title": "Home", "child": Container(color: Colors.blue)},
     {"title": "Packages", "child": Container(color: Colors.green)},
-    {"title": "Flights", "child": Container(color: Colors.orange)},
-    {"title": "Places", "child": Container(color: Colors.yellow)},
-    {"title": "Hotels", "child": Container(color: Colors.red)},
+    {"title": "Hotels", "child": AdminHotelsPage()},
   ];
 }

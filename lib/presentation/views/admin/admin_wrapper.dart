@@ -15,7 +15,7 @@ class AdminWrapper extends StatelessWidget {
       child: Scaffold(
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 13),
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
@@ -31,6 +31,7 @@ class AdminWrapper extends StatelessWidget {
                       labelPadding: const EdgeInsets.symmetric(horizontal: 16),
                       unselectedLabelColor: theme.textTheme.bodyLarge?.color,
                       indicatorColor: theme.colorScheme.primary,
+                      dividerColor: theme.colorScheme.primary.withAlpha(30),
                       tabs: adminWrapperProvider.tabs
                           .map((tab) => Tab(text: tab['title'] as String))
                           .toList(),

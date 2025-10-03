@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gotravel/core/routes/app_routes.dart';
 import 'package:gotravel/presentation/views/admin/admin_wrapper.dart';
+import 'package:gotravel/presentation/views/admin/hotels/pages/add_hotel_page.dart';
 import 'package:gotravel/presentation/views/splash/splash_page.dart';
 import 'package:gotravel/presentation/views/user/user_wrapper.dart';
 import 'package:gotravel/presentation/views/welcome/welcome_page.dart';
@@ -84,7 +85,23 @@ class AppRouter {
             transitionsBuilder: _slideTransition,
           );
         },
+        routes: [
+          /// Add Hotel route
+          GoRoute(
+            path: AppRoutes.addHotel,
+            pageBuilder: (context, state) {
+              return CustomTransitionPage(
+                key: state.pageKey,
+                child: const AdminAddHotelPage(),
+                transitionsBuilder: _slideTransition,
+              );
+            },
+          )
+        ]
       ),
+
+      /// Add Hotel route
+      
     ],
   );
 
