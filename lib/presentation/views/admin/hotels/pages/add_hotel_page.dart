@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:gotravel/presentation/views/admin/hotels/providers/add_hotel_provider.dart';
+import 'package:gotravel/presentation/providers/add_hotel_provider.dart';
 import 'package:gotravel/presentation/widgets/custom_button.dart';
 import 'package:gotravel/presentation/widgets/custom_text_area.dart';
 import 'package:gotravel/presentation/widgets/custom_text_field.dart';

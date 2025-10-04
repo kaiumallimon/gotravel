@@ -10,8 +10,12 @@ class CustomTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final bool enabled;
   final int? maxLines;
+  final double height;
+  final double width;
 
   const CustomTextField({
+    this.height = 50,
+    this.width = double.infinity,
     super.key,
     required this.controller,
     required this.labelText,
@@ -28,28 +32,32 @@ class CustomTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      validator: validator,
-      keyboardType: keyboardType,
-      enabled: enabled,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: labelText,
-        prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
-        suffixIcon: suffixIcon,
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            width: 1.5,
-            color: theme.dividerColor.withOpacity(.3),
+    return SizedBox(
+      height: height,
+      width: width,
+      child: TextFormField(
+        controller: controller,
+        obscureText: obscureText,
+        validator: validator,
+        keyboardType: keyboardType,
+        enabled: enabled,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          labelText: labelText,
+          prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
+          suffixIcon: suffixIcon,
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              width: 1.5,
+              color: theme.dividerColor.withOpacity(.3),
+            ),
           ),
-        ),
-
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(width: 2, color: theme.colorScheme.primary),
+      
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(width: 2, color: theme.colorScheme.primary),
+          ),
         ),
       ),
     );

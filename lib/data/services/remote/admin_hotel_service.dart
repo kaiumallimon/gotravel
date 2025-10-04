@@ -1,7 +1,61 @@
-// import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:gotravel/data/models/hotel_model.dart';
+import 'package:gotravel/data/models/room_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-// class AdminHotelService {
-//   final SupabaseClient _supabase = Supabase.instance.client;
+class AdminHotelService {
+  final SupabaseClient _supabase = Supabase.instance.client;
 
-//   Future<Map<String,dynamic>>
-// }
+  /// Fetch all hotels with their related rooms
+  Future<List<Hotel>> fetchHotels() async {
+    try {
+      // ✅ Supabase can perform a relational join
+      final response = await _supabase
+          .from('hotels')
+          .select('*, rooms(*)') // fetch rooms from the related table
+          .order('created_at', ascending: false);
+
+      final List data = response;
+
+      // Convert response into List<Hotel>
+      final hotels = data.map((hotel) => Hotel.fromMap(hotel)).toList();
+
+      return hotels;
+    } catch (e) {
+      throw Exception('Failed to fetch hotels: $e');
+    }
+  }
+
+  /// Fetch a single hotel by its ID (with its rooms)
+  Future<Hotel?> fetchHotelById(String hotelId) async {
+    try {
+      final response = await _supabase
+          .from('hotels')
+          .select('*, rooms(*)')
+          .eq('id', hotelId)
+          .maybeSingle();
+
+      if (response == null) return null;
+
+      return Hotel.fromMap(response);
+    } catch (e) {
+      throw Exception('Failed to fetch hotel: $e');
+    }
+  }
+
+  /// Fetch rooms for a specific hotel
+  Future<List<Room>> fetchRoomsByHotelId(String hotelId) async {
+    try {
+      final response = await _supabase
+          .from('rooms')
+          .select()
+          .eq('hotel_id', hotelId)
+          .order('created_at', ascending: false);
+
+      final List data = response;
+
+      return data.map((room) => Room.fromMap(room)).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch rooms: $e');
+    }
+  }
+}
