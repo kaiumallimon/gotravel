@@ -24,11 +24,13 @@ class AdminAddHotelPage extends StatelessWidget {
           builder: (context, provider, child) {
             return IconButton(
               icon: const Icon(Icons.arrow_back),
-              onPressed: provider.isLoading ? null : () {
-                GoRouter.of(context).pop();
-              },
+              onPressed: provider.isLoading
+                  ? null
+                  : () {
+                      GoRouter.of(context).pop();
+                    },
             );
-          }
+          },
         ),
         title: const Text("Add Hotel"),
         centerTitle: false,
@@ -44,6 +46,71 @@ class AdminAddHotelPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // import from json
+              Align(
+                alignment: Alignment.center,
+                child: TextButton.icon(
+                  onPressed: addHotelProvider.isLoading
+                      ? null
+                      : () async {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            builder: (context) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 25,
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Import Hotel from JSON",
+                                      style: theme.textTheme.titleMedium,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      "Paste your JSON data in the text area below and click 'Import'.",
+                                      style: theme.textTheme.bodyMedium,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    CustomTextArea(
+                                      minLines: 7,
+                                      maxLines: 15,
+                                      controller:
+                                          addHotelProvider.jsonController,
+                                      labelText: "JSON Data"
+                                    ),
+                                    const SizedBox(height: 20),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: Consumer<AddHotelProvider>(
+                                        builder: (context, provider, child) {
+                                          return ElevatedButton.icon(
+                                            onPressed: () {
+                                              provider.importFromJson(context);
+                                            },
+                                            icon: const Icon(Icons.file_upload),
+                                            label: const Text("Import"),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        },
+                  icon: const Icon(Icons.file_upload),
+                  label: const Text("Import from JSON"),
+                ),
+              ),
+
+              const SizedBox(height: 15),
+
               // Hotel Name
               CustomTextField(
                 controller: addHotelProvider.hotelNameController,
@@ -143,7 +210,7 @@ class AdminAddHotelPage extends StatelessWidget {
 
               // hotel images
               Consumer<AddHotelProvider>(
-                builder: (context , provider, child) {
+                builder: (context, provider, child) {
                   return Card(
                     elevation: 0,
                     color: theme.colorScheme.primary.withAlpha(100),
@@ -159,9 +226,12 @@ class AdminAddHotelPage extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Hotel Images", style: theme.textTheme.titleMedium),
+                          Text(
+                            "Hotel Images",
+                            style: theme.textTheme.titleMedium,
+                          ),
                           const SizedBox(height: 10),
-                  
+
                           GridView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
@@ -171,7 +241,7 @@ class AdminAddHotelPage extends StatelessWidget {
                                   crossAxisCount: 2,
                                   crossAxisSpacing: 10,
                                   mainAxisSpacing: 10,
-                                  mainAxisExtent: 150
+                                  mainAxisExtent: 150,
                                 ),
                             itemBuilder: (context, index) {
                               final imageFile = provider.images[index];
@@ -183,15 +253,17 @@ class AdminAddHotelPage extends StatelessWidget {
                                     height: double.infinity,
                                     fit: BoxFit.cover,
                                   ),
-                  
+
                                   // Remove Image Button
                                   Positioned(
                                     top: 5,
                                     right: 5,
                                     child: GestureDetector(
-                                      onTap: provider.isLoading? null : () {
-                                        provider.removeImage(index);
-                                      },
+                                      onTap: provider.isLoading
+                                          ? null
+                                          : () {
+                                              provider.removeImage(index);
+                                            },
                                       child: Container(
                                         decoration: BoxDecoration(
                                           color: Colors.black.withOpacity(0.5),
@@ -209,34 +281,38 @@ class AdminAddHotelPage extends StatelessWidget {
                               );
                             },
                           ),
-                  
+
                           // Add Image Button
                           Align(
                             alignment: Alignment.centerRight,
                             child: Consumer<AddHotelProvider>(
                               builder: (context, provider, child) {
                                 return ElevatedButton.icon(
-                                  onPressed: provider.isLoading ? null : () async {
-                                    await addHotelProvider.pickImages(context);
-                                  },
+                                  onPressed: provider.isLoading
+                                      ? null
+                                      : () async {
+                                          await addHotelProvider.pickImages(
+                                            context,
+                                          );
+                                        },
                                   icon: const Icon(Icons.add),
                                   label: const Text("Add Image"),
                                 );
-                              }
+                              },
                             ),
                           ),
                         ],
                       ),
                     ),
                   );
-                }
+                },
               ),
 
               const SizedBox(height: 20),
 
               // Rooms Section
-              Consumer<AddHotelProvider>  (
-                builder: (context , provider, child) {
+              Consumer<AddHotelProvider>(
+                builder: (context, provider, child) {
                   return Card(
                     elevation: 0,
                     color: theme.colorScheme.primary.withAlpha(100),
@@ -254,7 +330,7 @@ class AdminAddHotelPage extends StatelessWidget {
                         children: [
                           Text("Rooms", style: theme.textTheme.titleMedium),
                           const SizedBox(height: 10),
-                  
+
                           ListView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
@@ -296,7 +372,8 @@ class AdminAddHotelPage extends StatelessWidget {
                                       const SizedBox(height: 8),
                                       CustomTextField(
                                         controller: room["amenities"]!,
-                                        labelText: "Amenities (comma-separated)",
+                                        labelText:
+                                            "Amenities (comma-separated)",
                                       ),
                                       const SizedBox(height: 8),
                                       CustomTextField(
@@ -304,14 +381,16 @@ class AdminAddHotelPage extends StatelessWidget {
                                         labelText: "Available Count",
                                         keyboardType: TextInputType.number,
                                       ),
-                  
+
                                       // Remove Room Button
                                       Align(
                                         alignment: Alignment.centerRight,
                                         child: TextButton.icon(
-                                          onPressed: provider.isLoading? null : () {
-                                            provider.removeRoom(index);
-                                          },
+                                          onPressed: provider.isLoading
+                                              ? null
+                                              : () {
+                                                  provider.removeRoom(index);
+                                                },
                                           icon: const Icon(
                                             Icons.remove_circle,
                                             color: Colors.red,
@@ -330,14 +409,16 @@ class AdminAddHotelPage extends StatelessWidget {
                               );
                             },
                           ),
-                  
+
                           // Add Room Button (ONLY here)
                           Align(
                             alignment: Alignment.centerRight,
                             child: ElevatedButton.icon(
-                              onPressed: provider.isLoading ? null : () {
-                                provider.addRoom();
-                              },
+                              onPressed: provider.isLoading
+                                  ? null
+                                  : () {
+                                      provider.addRoom();
+                                    },
                               icon: const Icon(Icons.add),
                               label: const Text("Add Room"),
                             ),
@@ -346,7 +427,7 @@ class AdminAddHotelPage extends StatelessWidget {
                       ),
                     ),
                   );
-                }
+                },
               ),
 
               const SizedBox(height: 20),
@@ -357,24 +438,26 @@ class AdminAddHotelPage extends StatelessWidget {
                 child: Consumer<AddHotelProvider>(
                   builder: (context, provider, child) {
                     return ElevatedButton(
-                      onPressed: provider.isLoading ? null : () async {
-                        final error = provider.validateInputs();
-                        if (error != null) {
-                          QuickAlert.show(
-                            context: context,
-                            type: QuickAlertType.error,
-                            title: "Validation Error",
-                            text: error,
-                          );
-                          return;
-                        } else {
-                          await provider.saveHotelSupabase(context);
-                        }
-                        // Save hotel logic here
-                      },
+                      onPressed: provider.isLoading
+                          ? null
+                          : () async {
+                              final error = provider.validateInputs();
+                              if (error != null) {
+                                QuickAlert.show(
+                                  context: context,
+                                  type: QuickAlertType.error,
+                                  title: "Validation Error",
+                                  text: error,
+                                );
+                                return;
+                              } else {
+                                await provider.saveHotelSupabase(context);
+                              }
+                              // Save hotel logic here
+                            },
                       child: const Text("Save Hotel"),
                     );
-                  }
+                  },
                 ),
               ),
             ],

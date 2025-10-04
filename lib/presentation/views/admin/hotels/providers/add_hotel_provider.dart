@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:gotravel/data/services/remote/add_hotel_service.dart';
 import 'package:image_picker/image_picker.dart';
@@ -21,6 +23,7 @@ class AddHotelProvider extends ChangeNotifier {
   final TextEditingController hotelContactEmailController =
       TextEditingController();
   final TextEditingController hotelPhoneController = TextEditingController();
+  final TextEditingController jsonController = TextEditingController();
 
   // Dynamic rooms
   final List<Map<String, TextEditingController>> roomControllers = [];
@@ -146,31 +149,10 @@ class AddHotelProvider extends ChangeNotifier {
 
   /// Convert all controllers into a hotel data map
   Map<String, dynamic> buildHotelData(String coverImageUrl, List<String> imageUrls) {
-    // rooms.clear();
-    // for (var room in roomControllers) {
-    //   rooms.add({
-    //     "id": uuid.v4(), // UUID v4 for Supabase
-    //     "room_type": room["roomType"]?.text ?? "",
-    //     "price_per_night":
-    //         double.tryParse(room["pricePerNight"]?.text ?? "0") ?? 0.0,
-    //     "currency": room["currency"]?.text.isNotEmpty == true
-    //         ? room["currency"]!.text
-    //         : "USD",
-    //     "capacity": int.tryParse(room["capacity"]?.text ?? "0") ?? 0,
-    //     "bed_type": room["bedType"]?.text ?? "",
-    //     "amenities":
-    //         room["amenities"]?.text
-    //             .split(",")
-    //             .map((e) => e.trim())
-    //             .where((e) => e.isNotEmpty)
-    //             .toList() ??
-    //         [],
-    //     "available_count":
-    //         int.tryParse(room["availableCount"]?.text ?? "0") ?? 0,
-    //   });
-    // }
-
+    final hotelId = uuid.v4(); // Generate hotel ID
+    
     return {
+      "id": hotelId, // Add the hotel ID
       "name": hotelNameController.text,
       "description": hotelDescriptionController.text,
       "address": hotelAddressController.text,
@@ -184,8 +166,7 @@ class AddHotelProvider extends ChangeNotifier {
       "reviews_count": 0,
       "cover_image": coverImageUrl,
       "images": imageUrls,
-      "created_at": DateTime.now().toUtc().toIso8601String(),
-      "updated_at": DateTime.now().toUtc().toIso8601String(),
+      // Remove created_at and updated_at - let DB handle with defaults
     };
   }
 
@@ -197,29 +178,36 @@ class AddHotelProvider extends ChangeNotifier {
   List<Map<String, dynamic>> buildRoomData() {
     rooms.clear();
     for (var room in roomControllers) {
+      // Parse price as string to ensure proper numeric format for DB
+      final priceText = room["pricePerNight"]?.text ?? "0";
+      final price = double.tryParse(priceText) ?? 0.0;
+      
+      // Parse amenities
+      final amenitiesText = room["amenities"]?.text ?? "";
+      final amenitiesList = amenitiesText.isEmpty 
+          ? <String>[]
+          : amenitiesText
+              .split(",")
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
+      
       rooms.add({
         "id": uuid.v4(),
-        "room_type": room["roomType"]?.text ?? "",
-        "price_per_night":
-            double.tryParse(room["pricePerNight"]?.text ?? "0") ?? 0.0,
-        "currency": room["currency"]?.text.isNotEmpty == true
-            ? room["currency"]!.text
-            : "USD",
+        "room_type": room["roomType"]?.text.trim() ?? "",
+        "price_per_night": price, // This will be converted to numeric(10,2) by Supabase
+        "currency": room["currency"]?.text.trim().isNotEmpty == true
+            ? room["currency"]!.text.trim()
+            : "BDT", // Match your DB default
         "capacity": int.tryParse(room["capacity"]?.text ?? "0") ?? 0,
-        "bed_type": room["bedType"]?.text ?? "",
-        "amenities":
-            room["amenities"]?.text
-                .split(",")
-                .map((e) => e.trim())
-                .where((e) => e.isNotEmpty)
-                .toList() ??
-            [],
-        "available_count":
-            int.tryParse(room["availableCount"]?.text ?? "0") ?? 0,
-        "created_at": DateTime.now().toUtc().toIso8601String(),
-        "updated_at": DateTime.now().toUtc().toIso8601String(),
+        "bed_type": room["bedType"]?.text.trim() ?? "",
+        "amenities": amenitiesList,
+        "available_count": int.tryParse(room["availableCount"]?.text ?? "0") ?? 0,
+        // Remove created_at and updated_at - let DB handle with defaults
       });
     }
+    
+    debugPrint('🔍 Built room data: $rooms');
     return rooms;
   }
 
@@ -234,6 +222,7 @@ class AddHotelProvider extends ChangeNotifier {
     hotelLongitudeController.dispose();
     hotelContactEmailController.dispose();
     hotelPhoneController.dispose();
+    jsonController.dispose();
 
     for (var room in roomControllers) {
       for (var c in room.values) {
@@ -255,6 +244,7 @@ class AddHotelProvider extends ChangeNotifier {
     hotelContactEmailController.clear();
     hotelPhoneController.clear();
     coverImage = null;
+    jsonController.clear();
     images = [];
 
     for (var room in roomControllers) {
@@ -387,4 +377,83 @@ class AddHotelProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+
+  // import everything from json without cover image and images
+  void importFromJson(BuildContext context) {
+    final jsonString = jsonController.text;
+    if (jsonString.isEmpty) return;
+
+    try {
+      final jsonData = json.decode(jsonString);
+
+      // 🏨 Import hotel details
+      hotelNameController.text = jsonData['name'] ?? '';
+      hotelDescriptionController.text = jsonData['description'] ?? '';
+      hotelAddressController.text = jsonData['address'] ?? '';
+      hotelCityController.text = jsonData['city'] ?? '';
+      hotelCountryController.text = jsonData['country'] ?? '';
+      hotelLattitudeController.text = jsonData['latitude']?.toString() ?? '';
+      hotelLongitudeController.text = jsonData['longitude']?.toString() ?? '';
+      hotelContactEmailController.text = jsonData['contact_email'] ?? '';
+      hotelPhoneController.text = jsonData['phone'] ?? '';
+
+      // 🛏️ Clear any existing rooms
+      for (var room in roomControllers) {
+        for (var c in room.values) {
+          c.dispose();
+        }
+      }
+      roomControllers.clear();
+
+      // 🏠 Import room details
+      if (jsonData['rooms'] != null && jsonData['rooms'] is List) {
+        for (var room in jsonData['rooms']) {
+          final roomTypeController = TextEditingController(
+            text: room['roomType']?.toString() ?? '',
+          );
+          final pricePerNightController = TextEditingController(
+            text: room['pricePerNight']?.toString() ?? '',
+          );
+          final currencyController = TextEditingController(
+            text: room['currency']?.toString() ?? '',
+          );
+          final capacityController = TextEditingController(
+            text: room['capacity']?.toString() ?? '',
+          );
+          final bedTypeController = TextEditingController(
+            text: room['bedType']?.toString() ?? '',
+          );
+          final amenitiesController = TextEditingController(
+            text: room['amenities']?.toString() ?? '',
+          );
+          final availableCountController = TextEditingController(
+            text: room['availableCount']?.toString() ?? '',
+          );
+
+          roomControllers.add({
+            "roomType": roomTypeController,
+            "pricePerNight": pricePerNightController,
+            "currency": currencyController,
+            "capacity": capacityController,
+            "bedType": bedTypeController,
+            "amenities": amenitiesController,
+            "availableCount": availableCountController,
+          });
+        }
+      }
+
+      notifyListeners();
+      debugPrint(
+        '✅ JSON imported successfully with ${roomControllers.length} room(s).',
+      );
+      jsonController.clear();
+      if(context.mounted){
+        Navigator.of(context).pop(); 
+      }
+    } catch (e) {
+      debugPrint('❌ Error importing JSON: $e');
+    }
+  }
+
 }

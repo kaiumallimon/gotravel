@@ -85,12 +85,27 @@ class AddHotelService {
     try {
       await _checkAuthentication();
       
-      for (var room in roomData) {
+      debugPrint('🔍 Adding ${roomData.length} rooms for hotel: $hotelId');
+      
+      for (int i = 0; i < roomData.length; i++) {
+        var room = Map<String, dynamic>.from(roomData[i]); // Create a copy
         room['hotel_id'] = hotelId; // Associate room with hotel
-        final response = await _supabase.from('rooms').insert(room);
-        debugPrint('Room added: $response');
+        
+        debugPrint('🔍 Room ${i + 1} data before insertion: $room');
+        
+        try {
+          final response = await _supabase.from('rooms').insert(room);
+          debugPrint('✅ Room ${i + 1} added successfully: $response');
+        } catch (roomError) {
+          debugPrint('❌ Failed to add room ${i + 1}: $roomError');
+          debugPrint('❌ Room data that failed: $room');
+          throw Exception('Failed to add room ${i + 1}: $roomError');
+        }
       }
+      
+      debugPrint('✅ All rooms added successfully');
     } catch (error) {
+      debugPrint('❌ addRoom failed: $error');
       rethrow;
     }
   }
@@ -100,21 +115,38 @@ class AddHotelService {
     try {
       await _checkAuthentication();
       
-      final hotelResponse = await _supabase.from('hotels').insert(hotelData);
-      debugPrint('Hotel added: $hotelResponse');
+      debugPrint('🔍 Hotel data before insertion: $hotelData');
+      
+      // Insert hotel and return the inserted data to get the ID
+      final hotelResponse = await _supabase
+          .from('hotels')
+          .insert(hotelData)
+          .select('id');
+      
+      debugPrint('✅ Hotel added successfully: $hotelResponse');
 
-      // check if id exists in the response
-      if (hotelData.containsKey('id') && hotelData['id'] != null) {
-        final hotelId = hotelData['id'];
+      // Get hotel ID from response or from original data
+      String? hotelId;
+      
+      if (hotelResponse.isNotEmpty && hotelResponse[0]['id'] != null) {
+        hotelId = hotelResponse[0]['id'];
+        debugPrint('🔍 Hotel ID from response: $hotelId');
+      } else if (hotelData.containsKey('id') && hotelData['id'] != null) {
+        hotelId = hotelData['id'];
+        debugPrint('🔍 Hotel ID from data: $hotelId');
+      }
 
-        // If rooms are provided, add them
-        if (roomData.isNotEmpty) {
-          await addRoom(roomData, hotelId);
-        }
+      if (hotelId != null && roomData.isNotEmpty) {
+        debugPrint('🔍 Starting room insertion for hotel: $hotelId');
+        await addRoom(roomData, hotelId);
+      } else if (roomData.isNotEmpty) {
+        debugPrint('❌ Cannot add rooms - hotel ID not found');
+        throw Exception('Hotel ID not found after insertion. Cannot add rooms.');
       } else {
-        debugPrint('Hotel ID not found in the response. Cannot add rooms.');
+        debugPrint('✅ Hotel added successfully - no rooms to add');
       }
     } catch (error) {
+      debugPrint('❌ addHotel failed: $error');
       rethrow;
     }
   }
@@ -190,20 +222,41 @@ class AddHotelService {
       debugPrint('🔍 Attempting to add hotel without RLS check...');
       debugPrint('🔍 Hotel data: $hotelData');
       
-      final hotelResponse = await _supabase.from('hotels').insert(hotelData);
+      final hotelResponse = await _supabase
+          .from('hotels')
+          .insert(hotelData)
+          .select('id');
       debugPrint('✅ Hotel added successfully: $hotelResponse');
 
-      // check if id exists in the response
-      if (hotelData.containsKey('id') && hotelData['id'] != null) {
-        final hotelId = hotelData['id'];
+      // Get hotel ID from response or from original data
+      String? hotelId;
+      
+      if (hotelResponse.isNotEmpty && hotelResponse[0]['id'] != null) {
+        hotelId = hotelResponse[0]['id'];
+        debugPrint('🔍 Hotel ID from response: $hotelId');
+      } else if (hotelData.containsKey('id') && hotelData['id'] != null) {
+        hotelId = hotelData['id'];
+        debugPrint('🔍 Hotel ID from data: $hotelId');
+      }
+
+      if (hotelId != null) {
 
         // If rooms are provided, add them
         if (roomData.isNotEmpty) {
           debugPrint('🔍 Adding ${roomData.length} rooms...');
-          for (var room in roomData) {
+          for (int i = 0; i < roomData.length; i++) {
+            var room = Map<String, dynamic>.from(roomData[i]);
             room['hotel_id'] = hotelId;
-            final roomResponse = await _supabase.from('rooms').insert(room);
-            debugPrint('✅ Room added: $roomResponse');
+            
+            debugPrint('🔍 Room ${i + 1} data: $room');
+            
+            try {
+              final roomResponse = await _supabase.from('rooms').insert(room);
+              debugPrint('✅ Room ${i + 1} added: $roomResponse');
+            } catch (roomError) {
+              debugPrint('❌ Failed to add room ${i + 1}: $roomError');
+              throw Exception('Failed to add room ${i + 1}: $roomError');
+            }
           }
         }
       } else {
