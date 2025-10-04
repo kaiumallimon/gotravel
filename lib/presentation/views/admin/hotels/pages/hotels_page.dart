@@ -45,12 +45,15 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
     if (query.isEmpty) {
       return allHotels;
     } else {
-      return allHotels.where((hotel) =>
-        hotel.name.toLowerCase().contains(query) ||
-        hotel.city.toLowerCase().contains(query) ||
-        hotel.country.toLowerCase().contains(query) ||
-        hotel.address.toLowerCase().contains(query)
-      ).toList();
+      return allHotels
+          .where(
+            (hotel) =>
+                hotel.name.toLowerCase().contains(query) ||
+                hotel.city.toLowerCase().contains(query) ||
+                hotel.country.toLowerCase().contains(query) ||
+                hotel.address.toLowerCase().contains(query),
+          )
+          .toList();
     }
   }
 
@@ -95,12 +98,12 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
 
   String _formatPrice(List<Room> rooms) {
     if (rooms.isEmpty) return 'No rooms available';
-    
+
     final prices = rooms.map((room) => room.pricePerNight).toList()..sort();
     final minPrice = prices.first;
     final maxPrice = prices.last;
     final currency = rooms.first.currency;
-    
+
     if (minPrice == maxPrice) {
       return '$currency${minPrice.toStringAsFixed(0)}/night';
     }
@@ -112,7 +115,7 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
     final theme = Theme.of(context);
     final size = MediaQuery.of(context).size;
     final hotelsProvider = Provider.of<AdminHotelsProvider>(context);
-    
+
     // Filter hotels based on search query
     final hotels = _getFilteredHotels(hotelsProvider.hotels);
 
@@ -141,9 +144,6 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              
-              
-
               // Enhanced Search Bar
               Container(
                 decoration: BoxDecoration(
@@ -164,7 +164,7 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
                   controller: _searchController,
                 ),
               ),
-              
+
               const SizedBox(height: 24),
 
               // Hotels Grid
@@ -173,7 +173,12 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
                     ? _buildLoadingState()
                     : hotels.isEmpty
                     ? _buildEmptyState(theme)
-                    : _buildHotelsGrid(hotels, crossAxisCount, aspectRatio, theme),
+                    : _buildHotelsGrid(
+                        hotels,
+                        crossAxisCount,
+                        aspectRatio,
+                        theme,
+                      ),
               ),
             ],
           ),
@@ -208,7 +213,10 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
 
   Widget _buildEmptyState(ThemeData theme) {
     return RefreshIndicator(
-      onRefresh: () => Provider.of<AdminHotelsProvider>(context, listen: false).loadHotels(context),
+      onRefresh: () => Provider.of<AdminHotelsProvider>(
+        context,
+        listen: false,
+      ).loadHotels(context),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
@@ -230,7 +238,7 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  _searchController.text.isEmpty 
+                  _searchController.text.isEmpty
                       ? "No hotels found"
                       : "No hotels match your search",
                   style: theme.textTheme.headlineSmall?.copyWith(
@@ -256,9 +264,17 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
     );
   }
 
-  Widget _buildHotelsGrid(List<Hotel> hotels, int crossAxisCount, double aspectRatio, ThemeData theme) {
+  Widget _buildHotelsGrid(
+    List<Hotel> hotels,
+    int crossAxisCount,
+    double aspectRatio,
+    ThemeData theme,
+  ) {
     return RefreshIndicator(
-      onRefresh: () => Provider.of<AdminHotelsProvider>(context, listen: false).loadHotels(context),
+      onRefresh: () => Provider.of<AdminHotelsProvider>(
+        context,
+        listen: false,
+      ).loadHotels(context),
       child: GridView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -291,7 +307,7 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: () {
-            // Navigate to hotel details
+            
           },
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,7 +320,9 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
                     Container(
                       width: double.infinity,
                       decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
                       ),
                       clipBehavior: Clip.antiAlias,
                       child: Image.network(
@@ -338,7 +356,10 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
                         top: 12,
                         left: 12,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.black.withOpacity(0.7),
                             borderRadius: BorderRadius.circular(8),
@@ -346,7 +367,11 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.star, color: Colors.amber, size: 12),
+                              const Icon(
+                                Icons.star,
+                                color: Colors.amber,
+                                size: 12,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 hotel.rating.toStringAsFixed(1),
@@ -365,7 +390,10 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
                       top: 12,
                       right: 12,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: theme.colorScheme.primary,
                           borderRadius: BorderRadius.circular(8),
@@ -383,7 +411,7 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
                   ],
                 ),
               ),
-              
+
               // Hotel Details
               Expanded(
                 flex: 2,
@@ -402,9 +430,9 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      
+
                       const SizedBox(height: 4),
-                      
+
                       // Location with icon
                       Row(
                         children: [
@@ -418,7 +446,9 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
                             child: Text(
                               '${hotel.city}, ${hotel.country}',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                color: theme.colorScheme.onSurface.withOpacity(
+                                  0.7,
+                                ),
                                 fontWeight: FontWeight.w500,
                               ),
                               maxLines: 1,
@@ -427,28 +457,30 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
                           ),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 8),
-                      
+
                       // Rating and Reviews
                       Row(
                         children: [
                           _buildRatingStars(hotel.rating),
                           const SizedBox(width: 6),
                           Text(
-                            hotel.reviewsCount > 0 
+                            hotel.reviewsCount > 0
                                 ? '(${hotel.reviewsCount})'
                                 : 'No reviews',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.6,
+                              ),
                               fontSize: 11,
                             ),
                           ),
                         ],
                       ),
-                      
+
                       const Spacer(),
-                      
+
                       // Price and Rooms
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -465,8 +497,11 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
                             ),
                           ),
                           // Room amenities sample
-                          if (hotel.rooms.isNotEmpty && hotel.rooms.first.amenities.isNotEmpty)
-                            _buildAmenityChip(hotel.rooms.first.amenities.first),
+                          if (hotel.rooms.isNotEmpty &&
+                              hotel.rooms.first.amenities.isNotEmpty)
+                            _buildAmenityChip(
+                              hotel.rooms.first.amenities.first,
+                            ),
                         ],
                       ),
                     ],
