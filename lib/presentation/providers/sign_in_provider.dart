@@ -74,4 +74,11 @@ class SignInProvider extends ChangeNotifier {
     emailController.clear();
     passwordController.clear();
   }
+
+
+  Future<void> signOut(BuildContext context) async {
+    await service.signOut();
+    await HiveService.clearBox('user');
+    context.go(AppRoutes.login);
+  }
 }

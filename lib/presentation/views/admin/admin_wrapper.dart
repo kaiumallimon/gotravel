@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:gotravel/presentation/providers/admin_wrapper_provider.dart';
+import 'package:gotravel/presentation/providers/sign_in_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:quickalert/models/quickalert_type.dart';
+import 'package:quickalert/widgets/quickalert_dialog.dart';
 
 class AdminWrapper extends StatelessWidget {
   const AdminWrapper({super.key});
@@ -19,7 +22,7 @@ class AdminWrapper extends StatelessWidget {
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
-                _customAppBar(theme, adminWrapperProvider),
+                _customAppBar(context, theme, adminWrapperProvider),
                 SliverPersistentHeader(
                   pinned: true,
                   delegate: _TabBarDelegate(
@@ -54,6 +57,7 @@ class AdminWrapper extends StatelessWidget {
   }
 
   SliverAppBar _customAppBar(
+    BuildContext context,
     ThemeData theme,
     AdminWrapperProvider adminWrapperProvider,
   ) {
@@ -80,6 +84,29 @@ class AdminWrapper extends StatelessWidget {
         ),
       ),
       centerTitle: false,
+      actions: [
+        IconButton(
+          onPressed: () {
+            QuickAlert.show(
+              context: context,
+              type: QuickAlertType.confirm,
+              title: "Sign Out",
+              text: "Are you sure you want to sign out?",
+              confirmBtnText: "Yes",
+              cancelBtnText: "No",
+              onConfirmBtnTap: () {
+                Navigator.of(context).pop(); // Close the dialog
+                Provider.of<SignInProvider>(context, listen: false)
+                    .signOut(context);
+              },
+            );
+          },
+          icon: Icon(
+            Icons.logout,
+            color: theme.colorScheme.primary,
+          ),
+        ),
+      ],
     );
   }
 }
