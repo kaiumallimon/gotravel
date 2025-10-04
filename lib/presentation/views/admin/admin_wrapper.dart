@@ -74,8 +74,8 @@ class AdminWrapper extends StatelessWidget {
           ),
         ),
         body: TabBarView(
-          physics:
-              const NeverScrollableScrollPhysics(), // optional: control swipe
+          // physics:
+              // const NeverScrollableScrollPhysics(), // optional: control swipe
           children: adminWrapperProvider.tabs
               .map((tab) => tab['child'] as Widget)
               .toList(),

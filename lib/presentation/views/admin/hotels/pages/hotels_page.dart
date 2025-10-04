@@ -307,7 +307,10 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: () {
-            
+            context.push(
+              '/admin/detailed-hotel',
+              extra: hotel.toMap(),
+            );
           },
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
