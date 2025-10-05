@@ -21,7 +21,11 @@ class AdminPackageService {
       final List data = response;
 
       // Convert response into List<TourPackage>
-      final packages = data.map((package) => TourPackage.fromMap(package)).toList();
+      final packages = data
+          .map((package) => TourPackage.fromMap(package))
+          .toList();
+
+      print("Fetched packages: ${packages.first.toMap()}");
 
       return packages;
     } catch (e) {
@@ -51,7 +55,9 @@ class AdminPackageService {
   }
 
   /// Fetch activities for a specific package
-  Future<List<PackageActivity>> fetchActivitiesByPackageId(String packageId) async {
+  Future<List<PackageActivity>> fetchActivitiesByPackageId(
+    String packageId,
+  ) async {
     try {
       final response = await _supabase
           .from('package_activities')
@@ -87,10 +93,7 @@ class AdminPackageService {
   /// Delete a package (this will cascade delete activities and dates)
   Future<void> deletePackage(String packageId) async {
     try {
-      await _supabase
-          .from('packages')
-          .delete()
-          .eq('id', packageId);
+      await _supabase.from('packages').delete().eq('id', packageId);
     } catch (e) {
       throw Exception('Failed to delete package: $e');
     }
