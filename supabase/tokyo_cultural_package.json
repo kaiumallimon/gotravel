@@ -1,0 +1,168 @@
+{
+  "name": "Tokyo Cultural Discovery",
+  "description": "Immerse yourself in the fascinating blend of traditional and modern Japanese culture with this 8-day Tokyo discovery tour. Experience ancient temples, cutting-edge technology, world-class cuisine, and the unique Japanese way of life in the world's most exciting metropolis.",
+  "destination": "Tokyo",
+  "country": "Japan",
+  "category": "Cultural",
+  "duration_days": 8,
+  "price": 1899.00,
+  "currency": "USD",
+  "max_participants": 25,
+  "available_slots": 20,
+  "difficulty_level": "Easy",
+  "minimum_age": 12,
+  "included_services": [
+    "Airport transfers",
+    "7 nights hotel accommodation",
+    "Daily breakfast",
+    "English-speaking guide",
+    "All temple entrance fees",
+    "Tokyo Metro pass",
+    "Welcome and farewell dinners",
+    "Cultural workshops"
+  ],
+  "excluded_services": [
+    "International flights",
+    "Lunch and dinner (except specified)",
+    "Personal shopping expenses",
+    "Optional activities",
+    "Travel insurance",
+    "Tips and gratuities",
+    "Alcoholic beverages"
+  ],
+  "contact_email": "info@tokyotours.jp",
+  "contact_phone": "+81 3 1234 5678",
+  "activities": [
+    {
+      "day_number": 1,
+      "activity_name": "Arrival and Orientation",
+      "description": "Airport pickup, hotel check-in, and evening orientation walk through Shibuya district including the famous crossing.",
+      "location": "Shibuya",
+      "start_time": "15:00",
+      "end_time": "20:00",
+      "activity_type": "Orientation",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 2,
+      "activity_name": "Traditional Tokyo",
+      "description": "Visit Senso-ji Temple in Asakusa, explore traditional Nakamise shopping street, and experience a tea ceremony.",
+      "location": "Asakusa",
+      "start_time": "09:00",
+      "end_time": "16:00",
+      "activity_type": "Cultural",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 3,
+      "activity_name": "Imperial Palace and Gardens",
+      "description": "Guided tour of Imperial Palace East Gardens and surrounding areas, followed by lunch in Ginza district.",
+      "location": "Imperial Palace",
+      "start_time": "10:00",
+      "end_time": "15:00",
+      "activity_type": "Sightseeing",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 4,
+      "activity_name": "Modern Tokyo Experience",
+      "description": "Visit teamLab Borderless digital art museum, explore Odaiba artificial island, and see Rainbow Bridge.",
+      "location": "Odaiba",
+      "start_time": "10:00",
+      "end_time": "18:00",
+      "activity_type": "Modern Culture",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 5,
+      "activity_name": "Tsukiji and Cooking Class",
+      "description": "Early morning visit to Tsukiji Outer Market, followed by hands-on sushi making class and lunch.",
+      "location": "Tsukiji",
+      "start_time": "07:00",
+      "end_time": "14:00",
+      "activity_type": "Culinary",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 6,
+      "activity_name": "Harajuku and Omotesando",
+      "description": "Explore youth culture in Harajuku, visit Meiji Shrine, and shop in trendy Omotesando Hills.",
+      "location": "Harajuku",
+      "start_time": "10:00",
+      "end_time": "17:00",
+      "activity_type": "Cultural",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 6,
+      "activity_name": "Robot Restaurant Show",
+      "description": "Optional evening entertainment at the famous Robot Restaurant in Shinjuku (includes dinner).",
+      "location": "Shinjuku",
+      "start_time": "19:00",
+      "end_time": "21:30",
+      "activity_type": "Entertainment",
+      "is_optional": true,
+      "additional_cost": 85
+    },
+    {
+      "day_number": 7,
+      "activity_name": "Day Trip to Nikko",
+      "description": "Full day excursion to UNESCO World Heritage site Nikko, including Toshogu Shrine and natural hot springs.",
+      "location": "Nikko",
+      "start_time": "08:00",
+      "end_time": "19:00",
+      "activity_type": "Sightseeing",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 8,
+      "activity_name": "Departure",
+      "description": "Last-minute shopping in Akihabara electronics district, followed by airport transfer.",
+      "location": "Akihabara to Airport",
+      "start_time": "11:00",
+      "end_time": "15:00",
+      "activity_type": "Shopping",
+      "is_optional": false,
+      "additional_cost": 0
+    }
+  ],
+  "package_dates": [
+    {
+      "departure_date": "2024-03-20",
+      "return_date": "2024-03-27",
+      "available_slots": 20,
+      "price_override": 1799.00
+    },
+    {
+      "departure_date": "2024-04-15",
+      "return_date": "2024-04-22",
+      "available_slots": 25,
+      "price_override": 2199.00
+    },
+    {
+      "departure_date": "2024-05-10",
+      "return_date": "2024-05-17",
+      "available_slots": 18,
+      "price_override": null
+    },
+    {
+      "departure_date": "2024-10-05",
+      "return_date": "2024-10-12",
+      "available_slots": 22,
+      "price_override": 2099.00
+    },
+    {
+      "departure_date": "2024-11-18",
+      "return_date": "2024-11-25",
+      "available_slots": 15,
+      "price_override": 1699.00
+    }
+  ]
+}

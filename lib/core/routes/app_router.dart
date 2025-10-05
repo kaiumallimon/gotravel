@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gotravel/core/routes/app_routes.dart';
 import 'package:gotravel/data/models/hotel_model.dart';
+import 'package:gotravel/data/models/tour_package_model.dart';
 import 'package:gotravel/presentation/views/admin/admin_wrapper.dart';
 import 'package:gotravel/presentation/views/admin/hotels/pages/add_hotel_page.dart';
 import 'package:gotravel/presentation/views/admin/hotels/pages/detailed_hotel_page.dart';
+import 'package:gotravel/presentation/views/admin/packages/pages/add_package_page.dart';
+import 'package:gotravel/presentation/views/admin/packages/pages/detailed_package_page.dart';
 import 'package:gotravel/presentation/views/splash/splash_page.dart';
 import 'package:gotravel/presentation/views/user/user_wrapper.dart';
 import 'package:gotravel/presentation/views/welcome/welcome_page.dart';
@@ -110,6 +113,33 @@ class AppRouter {
                 key: state.pageKey,
                 child: DetailedHotelPage(
                   hotel: hotel,
+                ),
+                transitionsBuilder: _slideTransition,
+              );
+            },
+          ),
+
+          /// Add Package route
+          GoRoute(
+            path: AppRoutes.addPackage,
+            pageBuilder: (context, state) {
+              return CustomTransitionPage(
+                key: state.pageKey,
+                child: const AdminAddPackagePage(),
+                transitionsBuilder: _slideTransition,
+              );
+            },
+          ),
+
+          GoRoute(
+            path: AppRoutes.detailedPackage,
+            pageBuilder: (context, state) {
+              final package = state.extra as TourPackage;
+
+              return CustomTransitionPage(
+                key: state.pageKey,
+                child: DetailedPackagePage(
+                  package: package,
                 ),
                 transitionsBuilder: _slideTransition,
               );

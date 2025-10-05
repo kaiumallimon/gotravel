@@ -7,4 +7,6 @@ class AppRoutes {
   static const String userWrapper = '/home';
   static const String addHotel = '/add-hotel';
   static const String detailedHotel = '/detailed-hotel';
+  static const String addPackage = '/add-package';
+  static const String detailedPackage = '/detailed-package';
 }

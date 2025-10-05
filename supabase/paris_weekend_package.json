@@ -1,0 +1,104 @@
+{
+  "name": "Paris Weekend Getaway",
+  "description": "A perfect 3-day romantic weekend in the City of Light. Visit iconic landmarks, enjoy world-class cuisine, and experience Parisian culture in this compact but comprehensive tour.",
+  "destination": "Paris",
+  "country": "France",
+  "category": "Romantic",
+  "duration_days": 3,
+  "price": 599.00,
+  "currency": "EUR",
+  "max_participants": 30,
+  "available_slots": 25,
+  "difficulty_level": "Easy",
+  "minimum_age": 0,
+  "included_services": [
+    "Airport transfers",
+    "2 nights boutique hotel",
+    "Daily continental breakfast",
+    "Seine river cruise",
+    "Eiffel Tower tickets",
+    "Metro day passes"
+  ],
+  "excluded_services": [
+    "International flights",
+    "Lunch and dinner",
+    "Museum entries",
+    "Personal expenses",
+    "Optional wine tasting",
+    "Travel insurance"
+  ],
+  "contact_email": "bonjour@parisweekend.fr",
+  "contact_phone": "+33 1 42 12 34 56",
+  "activities": [
+    {
+      "day_number": 1,
+      "activity_name": "Classic Paris Tour",
+      "description": "Visit Eiffel Tower, Arc de Triomphe, and stroll down Champs-Élysées. Evening Seine river cruise.",
+      "location": "Central Paris",
+      "start_time": "14:00",
+      "end_time": "20:00",
+      "activity_type": "Sightseeing",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 2,
+      "activity_name": "Montmartre and Sacré-Cœur",
+      "description": "Explore artistic Montmartre district, visit Sacré-Cœur Basilica, and enjoy street artist performances.",
+      "location": "Montmartre",
+      "start_time": "10:00",
+      "end_time": "16:00",
+      "activity_type": "Cultural",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 2,
+      "activity_name": "Wine Tasting Experience",
+      "description": "Optional French wine tasting session with cheese pairings in a traditional wine bar.",
+      "location": "Le Marais",
+      "start_time": "18:00",
+      "end_time": "20:00",
+      "activity_type": "Culinary",
+      "is_optional": true,
+      "additional_cost": 45
+    },
+    {
+      "day_number": 3,
+      "activity_name": "Louvre and Departure",
+      "description": "Morning visit to the Louvre Museum (optional), followed by last-minute shopping and airport transfer.",
+      "location": "Louvre to Airport",
+      "start_time": "09:00",
+      "end_time": "15:00",
+      "activity_type": "Cultural",
+      "is_optional": false,
+      "additional_cost": 25
+    }
+  ],
+  "package_dates": [
+    {
+      "departure_date": "2024-02-14",
+      "return_date": "2024-02-16",
+      "available_slots": 25,
+      "price_override": 699.00
+    },
+    {
+      "departure_date": "2024-03-08",
+      "return_date": "2024-03-10",
+      "available_slots": 30,
+      "price_override": null
+    },
+    {
+      "departure_date": "2024-04-12",
+      "return_date": "2024-04-14",
+      "available_slots": 28,
+      "price_override": 649.00
+    },
+    {
+      "departure_date": "2024-05-17",
+      "return_date": "2024-05-19",
+      "available_slots": 20,
+      "price_override": null
+    }
+  ]
+}

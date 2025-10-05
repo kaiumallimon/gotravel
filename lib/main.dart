@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:gotravel/core/routes/app_router.dart';
 import 'package:gotravel/presentation/providers/admin_hotels_provider.dart';
+import 'package:gotravel/presentation/providers/admin_packages_provider.dart';
 import 'package:gotravel/presentation/providers/admin_wrapper_provider.dart';
 import 'package:gotravel/presentation/providers/welcome_viewmodel.dart';
 import 'package:gotravel/presentation/providers/sign_in_provider.dart';
 import 'package:gotravel/presentation/providers/sign_up_provider.dart';
 import 'package:gotravel/presentation/providers/add_hotel_provider.dart';
+import 'package:gotravel/presentation/providers/add_package_provider.dart';
 import 'package:gotravel/theming/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -58,6 +60,12 @@ class MyApp extends StatelessWidget {
 
         // Admin Hotels Provider
         ChangeNotifierProvider(create: (context) => AdminHotelsProvider()),
+
+        /// Add Package Provider
+        ChangeNotifierProvider(create: (context) => AddPackageProvider()),
+
+        /// Admin Packages Provider
+        ChangeNotifierProvider(create: (context) => AdminPackagesProvider()),
       ],
       child: MaterialApp.router(
         title: 'GoTravel',

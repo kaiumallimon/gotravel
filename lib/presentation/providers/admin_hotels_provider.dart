@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:gotravel/data/models/hotel_model.dart';
 import 'package:gotravel/data/services/remote/admin_hotel_service.dart';
@@ -30,6 +32,14 @@ class AdminHotelsProvider extends ChangeNotifier {
 
     try {
       final response = await AdminHotelService().fetchHotels();
+      log('Fetched ${response.length} hotels');
+      if (response.isNotEmpty) {
+        log('First hotel: ${response.first.name}');
+        log('First hotel rooms count: ${response.first.rooms.length}');
+        if (response.first.rooms.isNotEmpty) {
+          log('First room: ${response.first.rooms.first.toMap()}');
+        }
+      }
       hotels = response;
     } catch (error) {
       isLoading = false;

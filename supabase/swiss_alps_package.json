@@ -1,0 +1,190 @@
+{
+  "name": "Swiss Alps Adventure",
+  "description": "Discover the breathtaking beauty of the Swiss Alps with this incredible 10-day adventure tour. Experience world-class hiking trails, pristine mountain lakes, charming alpine villages, and stunning glacial landscapes. Perfect for nature lovers and adventure enthusiasts seeking an unforgettable mountain experience.",
+  "destination": "Swiss Alps",
+  "country": "Switzerland",
+  "category": "Adventure",
+  "duration_days": 10,
+  "price": 2499.00,
+  "currency": "USD",
+  "max_participants": 16,
+  "available_slots": 12,
+  "difficulty_level": "Moderate",
+  "minimum_age": 18,
+  "included_services": [
+    "Airport transfers",
+    "9 nights accommodation in mountain lodges",
+    "Daily breakfast and dinner",
+    "Professional mountain guide",
+    "All hiking equipment",
+    "Cable car tickets",
+    "Travel insurance",
+    "Group transportation"
+  ],
+  "excluded_services": [
+    "International flights",
+    "Lunch meals",
+    "Personal expenses",
+    "Alcoholic beverages",
+    "Optional helicopter tour",
+    "Spa treatments",
+    "Tips for guides"
+  ],
+  "contact_email": "adventures@swissalps.com",
+  "contact_phone": "+41 33 123 4567",
+  "activities": [
+    {
+      "day_number": 1,
+      "activity_name": "Arrival in Zurich",
+      "description": "Airport pickup and transfer to mountain lodge. Evening welcome dinner and briefing session.",
+      "location": "Zurich Airport to Grindelwald",
+      "start_time": "14:00",
+      "end_time": "20:00",
+      "activity_type": "Transfer",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 2,
+      "activity_name": "Jungfraujoch - Top of Europe",
+      "description": "Take the cogwheel train to Jungfraujoch, Europe's highest railway station. Visit the Ice Palace and enjoy panoramic glacier views.",
+      "location": "Jungfraujoch",
+      "start_time": "08:00",
+      "end_time": "17:00",
+      "activity_type": "Sightseeing",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 3,
+      "activity_name": "Eiger Trail Hike",
+      "description": "Moderate hike along the famous Eiger Trail with spectacular views of the north face of the Eiger.",
+      "location": "Eiger Trail",
+      "start_time": "09:00",
+      "end_time": "16:00",
+      "activity_type": "Hiking",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 4,
+      "activity_name": "Lake Brienz Boat Tour",
+      "description": "Scenic boat cruise on the turquoise waters of Lake Brienz with stops at traditional Swiss villages.",
+      "location": "Lake Brienz",
+      "start_time": "10:00",
+      "end_time": "15:00",
+      "activity_type": "Sightseeing",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 5,
+      "activity_name": "Matterhorn Region",
+      "description": "Travel to Zermatt and take the Gornergrat railway for iconic Matterhorn views. Evening in car-free Zermatt village.",
+      "location": "Zermatt",
+      "start_time": "07:00",
+      "end_time": "19:00",
+      "activity_type": "Sightseeing",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 6,
+      "activity_name": "Riffelberg Hike",
+      "description": "Challenging hike from Riffelberg with close-up views of the Matterhorn and surrounding peaks.",
+      "location": "Riffelberg",
+      "start_time": "09:00",
+      "end_time": "17:00",
+      "activity_type": "Hiking",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 7,
+      "activity_name": "Helicopter Tour",
+      "description": "Optional helicopter tour over the Swiss Alps for aerial views of glaciers and peaks (weather permitting).",
+      "location": "Zermatt Heliport",
+      "start_time": "11:00",
+      "end_time": "12:00",
+      "activity_type": "Adventure",
+      "is_optional": true,
+      "additional_cost": 350
+    },
+    {
+      "day_number": 7,
+      "activity_name": "Spa and Wellness",
+      "description": "Afternoon relaxation at alpine spa with mountain views. Massage and thermal baths available.",
+      "location": "Alpine Spa Center",
+      "start_time": "14:00",
+      "end_time": "18:00",
+      "activity_type": "Relaxation",
+      "is_optional": true,
+      "additional_cost": 120
+    },
+    {
+      "day_number": 8,
+      "activity_name": "Glacier Express Journey",
+      "description": "Scenic train journey on the famous Glacier Express from Zermatt to St. Moritz through Alpine landscapes.",
+      "location": "Glacier Express Route",
+      "start_time": "08:30",
+      "end_time": "16:00",
+      "activity_type": "Sightseeing",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 9,
+      "activity_name": "St. Moritz Exploration",
+      "description": "Explore the luxury resort town of St. Moritz, visit local markets, and enjoy lake activities.",
+      "location": "St. Moritz",
+      "start_time": "10:00",
+      "end_time": "17:00",
+      "activity_type": "Cultural",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 10,
+      "activity_name": "Departure",
+      "description": "Transfer to Zurich airport for departure. Last-minute shopping at airport duty-free.",
+      "location": "St. Moritz to Zurich Airport",
+      "start_time": "10:00",
+      "end_time": "14:00",
+      "activity_type": "Transfer",
+      "is_optional": false,
+      "additional_cost": 0
+    }
+  ],
+  "package_dates": [
+    {
+      "departure_date": "2024-06-15",
+      "return_date": "2024-06-24",
+      "available_slots": 12,
+      "price_override": null
+    },
+    {
+      "departure_date": "2024-07-20",
+      "return_date": "2024-07-29",
+      "available_slots": 16,
+      "price_override": 2699.00
+    },
+    {
+      "departure_date": "2024-08-10",
+      "return_date": "2024-08-19",
+      "available_slots": 14,
+      "price_override": 2799.00
+    },
+    {
+      "departure_date": "2024-09-05",
+      "return_date": "2024-09-14",
+      "available_slots": 10,
+      "price_override": 2399.00
+    },
+    {
+      "departure_date": "2024-09-28",
+      "return_date": "2024-10-07",
+      "available_slots": 8,
+      "price_override": 2299.00
+    }
+  ]
+}

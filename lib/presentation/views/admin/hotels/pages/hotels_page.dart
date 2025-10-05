@@ -402,7 +402,7 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          '${hotel.rooms.length} rooms',
+                          '${hotel.rooms.length} types of rooms',
                           style: TextStyle(
                             color: theme.colorScheme.onPrimary,
                             fontSize: 11,

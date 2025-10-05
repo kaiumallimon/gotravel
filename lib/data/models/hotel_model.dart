@@ -81,6 +81,7 @@ class Hotel {
       'reviews_count': reviewsCount,
       'cover_image': coverImage,
       'images': images,
+      'rooms': rooms.map((room) => room.toMap()).toList(),
     };
   }
 }

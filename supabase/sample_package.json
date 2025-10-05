@@ -1,0 +1,138 @@
+{
+  "name": "Bali Adventure Tour",
+  "description": "Experience the beauty of Bali with this comprehensive 7-day adventure tour. Explore ancient temples, pristine beaches, lush rice terraces, and vibrant local culture. Perfect for adventure seekers and culture enthusiasts alike.",
+  "destination": "Bali",
+  "country": "Indonesia", 
+  "category": "Adventure",
+  "duration_days": 7,
+  "price": 1299.00,
+  "currency": "USD",
+  "max_participants": 20,
+  "available_slots": 15,
+  "difficulty_level": "Moderate",
+  "minimum_age": 16,
+  "included_services": [
+    "Airport transfers",
+    "7 nights accommodation", 
+    "Daily breakfast",
+    "Professional guide",
+    "All entrance fees",
+    "Transportation in AC vehicle",
+    "Travel insurance"
+  ],
+  "excluded_services": [
+    "International flights",
+    "Lunch and dinner",
+    "Personal expenses",
+    "Tips for guide and driver",
+    "Alcoholic beverages",
+    "Optional activities"
+  ],
+  "contact_email": "info@balitravel.com",
+  "contact_phone": "+62 361 123456",
+  "activities": [
+    {
+      "day_number": 1,
+      "activity_name": "Arrival and Temple Visit",
+      "description": "Airport pickup and visit to iconic Tanah Lot Temple during sunset",
+      "location": "Tanah Lot Temple",
+      "start_time": "14:00",
+      "end_time": "19:00",
+      "activity_type": "Cultural",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 2,
+      "activity_name": "Ubud Cultural Tour", 
+      "description": "Explore monkey forest, traditional markets, and Tegallalang Rice Terraces",
+      "location": "Ubud",
+      "start_time": "08:00",
+      "end_time": "17:00", 
+      "activity_type": "Cultural",
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 3,
+      "activity_name": "Mount Batur Sunrise Trek",
+      "description": "Early morning trek to witness spectacular sunrise from Mount Batur volcano",
+      "location": "Mount Batur",
+      "start_time": "03:00",
+      "end_time": "12:00",
+      "activity_type": "Adventure", 
+      "is_optional": false,
+      "additional_cost": 0
+    },
+    {
+      "day_number": 4,
+      "activity_name": "Water Sports and Beach Day",
+      "description": "Enjoy various water activities at Tanjung Benoa beach",
+      "location": "Tanjung Benoa",
+      "start_time": "09:00", 
+      "end_time": "16:00",
+      "activity_type": "Adventure",
+      "is_optional": false,
+      "additional_cost": 50
+    },
+    {
+      "day_number": 5,
+      "activity_name": "Traditional Village Experience",
+      "description": "Visit Penglipuran traditional village and learn about Balinese culture",
+      "location": "Penglipuran Village",
+      "start_time": "09:00",
+      "end_time": "15:00",
+      "activity_type": "Cultural",
+      "is_optional": false, 
+      "additional_cost": 0
+    },
+    {
+      "day_number": 6,
+      "activity_name": "Spa and Shopping",
+      "description": "Relaxing traditional Balinese spa treatment and shopping at local markets",
+      "location": "Seminyak",
+      "start_time": "10:00",
+      "end_time": "18:00",
+      "activity_type": "Relaxation",
+      "is_optional": true,
+      "additional_cost": 80
+    },
+    {
+      "day_number": 7,
+      "activity_name": "Departure",
+      "description": "Check out and airport transfer for departure",
+      "location": "Hotel to Airport",
+      "start_time": "10:00",
+      "end_time": "12:00", 
+      "activity_type": "Transfer",
+      "is_optional": false,
+      "additional_cost": 0
+    }
+  ],
+  "package_dates": [
+    {
+      "departure_date": "2024-03-15",
+      "return_date": "2024-03-21", 
+      "available_slots": 15,
+      "price_override": null
+    },
+    {
+      "departure_date": "2024-04-12",
+      "return_date": "2024-04-18",
+      "available_slots": 20,
+      "price_override": 1199.00
+    },
+    {
+      "departure_date": "2024-05-10",
+      "return_date": "2024-05-16", 
+      "available_slots": 18,
+      "price_override": null
+    },
+    {
+      "departure_date": "2024-06-14",
+      "return_date": "2024-06-20",
+      "available_slots": 12,
+      "price_override": 1399.00
+    }
+  ]
+}
