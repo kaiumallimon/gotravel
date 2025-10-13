@@ -41,6 +41,7 @@ class SupabaseAuthService {
     required String email,
     required String password,
     required String fullName,
+    String role = 'user',
   }) async {
     try {
       // 1. Create the user in Supabase Auth
@@ -56,7 +57,7 @@ class SupabaseAuthService {
         await _supabase.from('users').upsert({
           'id': userId,
           'email': email,
-          'role': 'user',
+          'role': role,
           'name': fullName,
         });
 

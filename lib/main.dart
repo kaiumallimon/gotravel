@@ -8,6 +8,8 @@ import 'package:gotravel/presentation/providers/sign_in_provider.dart';
 import 'package:gotravel/presentation/providers/sign_up_provider.dart';
 import 'package:gotravel/presentation/providers/add_hotel_provider.dart';
 import 'package:gotravel/presentation/providers/add_package_provider.dart';
+import 'package:gotravel/presentation/providers/admin_users_provider.dart';
+import 'package:gotravel/presentation/providers/admin_add_user_provider.dart';
 import 'package:gotravel/theming/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -66,6 +68,12 @@ class MyApp extends StatelessWidget {
 
         /// Admin Packages Provider
         ChangeNotifierProvider(create: (context) => AdminPackagesProvider()),
+
+        /// Admin Users Provider
+        ChangeNotifierProvider(create: (context) => AdminUsersProvider()),
+
+        /// Admin Add User Provider
+        ChangeNotifierProvider(create: (context) => AdminAddUserProvider()),
       ],
       child: MaterialApp.router(
         title: 'GoTravel',
