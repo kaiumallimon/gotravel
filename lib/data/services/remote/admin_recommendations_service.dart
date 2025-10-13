@@ -9,20 +9,29 @@ class AdminRecommendationsService {
   // Get all recommended packages
   Future<List<TourPackage>> getRecommendedPackages() async {
     try {
-      final response = await _supabase
+      // Step 1: Get recommended package IDs
+      final recommendedResponse = await _supabase
           .from('recommendations')
-          .select('''
-            id,
-            item_id,
-            created_at,
-            packages!inner(*)
-          ''')
-          .eq('item_type', 'package')
+          .select('item_id')
+          .eq('item_type', 'package');
+
+      if (recommendedResponse.isEmpty) {
+        return [];
+      }
+
+      final packageIds = recommendedResponse
+          .map((item) => item['item_id'] as String)
+          .toList();
+
+      // Step 2: Fetch package data
+      final packagesResponse = await _supabase
+          .from('packages')
+          .select('*, package_activities(*), package_dates(*)')
+          .inFilter('id', packageIds)
           .order('created_at', ascending: false);
 
-      return response
-          .map((item) => TourPackage.fromMap(item['packages']))
-          .toList();
+      final List data = packagesResponse;
+      return data.map((package) => TourPackage.fromMap(package)).toList();
     } catch (e) {
       log('Error fetching recommended packages: $e');
       throw Exception('Failed to fetch recommended packages: $e');
@@ -32,20 +41,29 @@ class AdminRecommendationsService {
   // Get all recommended hotels
   Future<List<Hotel>> getRecommendedHotels() async {
     try {
-      final response = await _supabase
+      // Step 1: Get recommended hotel IDs
+      final recommendedResponse = await _supabase
           .from('recommendations')
-          .select('''
-            id,
-            item_id,
-            created_at,
-            hotels!inner(*)
-          ''')
-          .eq('item_type', 'hotel')
+          .select('item_id')
+          .eq('item_type', 'hotel');
+
+      if (recommendedResponse.isEmpty) {
+        return [];
+      }
+
+      final hotelIds = recommendedResponse
+          .map((item) => item['item_id'] as String)
+          .toList();
+
+      // Step 2: Fetch hotel data
+      final hotelsResponse = await _supabase
+          .from('hotels')
+          .select('*, rooms(*)')
+          .inFilter('id', hotelIds)
           .order('created_at', ascending: false);
 
-      return response
-          .map((item) => Hotel.fromMap(item['hotels']))
-          .toList();
+      final List data = hotelsResponse;
+      return data.map((hotel) => Hotel.fromMap(hotel)).toList();
     } catch (e) {
       log('Error fetching recommended hotels: $e');
       throw Exception('Failed to fetch recommended hotels: $e');
@@ -55,26 +73,27 @@ class AdminRecommendationsService {
   // Get all packages with recommendation status
   Future<List<Map<String, dynamic>>> getAllPackagesWithStatus() async {
     try {
-      final response = await _supabase
+      // Step 1: Get all recommended package IDs
+      final recommendedResponse = await _supabase
+          .from('recommendations')
+          .select('item_id')
+          .eq('item_type', 'package');
+      final recommendedIds = recommendedResponse.map((item) => item['item_id'] as String).toSet();
+
+      // Step 2: Get all packages
+      final packagesResponse = await _supabase
           .from('packages')
-          .select('''
-            *,
-            recommendations!left(id)
-          ''')
+          .select('*, package_activities(*), package_dates(*)')
           .eq('is_active', true)
           .order('created_at', ascending: false);
 
-      return response.map((item) {
+      return packagesResponse.map((item) {
         final package = TourPackage.fromMap(item);
-        final isRecommended = item['recommendations'] != null && 
-                             (item['recommendations'] as List).isNotEmpty;
-        
+        final isRecommended = recommendedIds.contains(package.id);
         return {
           'package': package,
           'isRecommended': isRecommended,
-          'recommendationId': isRecommended 
-              ? (item['recommendations'] as List).first['id'] 
-              : null,
+          'recommendationId': isRecommended ? package.id : null,
         };
       }).toList();
     } catch (e) {
@@ -86,26 +105,26 @@ class AdminRecommendationsService {
   // Get all hotels with recommendation status
   Future<List<Map<String, dynamic>>> getAllHotelsWithStatus() async {
     try {
-      final response = await _supabase
+      // Step 1: Get all recommended hotel IDs
+      final recommendedResponse = await _supabase
+          .from('recommendations')
+          .select('item_id')
+          .eq('item_type', 'hotel');
+      final recommendedIds = recommendedResponse.map((item) => item['item_id'] as String).toSet();
+
+      // Step 2: Get all hotels
+      final hotelsResponse = await _supabase
           .from('hotels')
-          .select('''
-            *,
-            recommendations!left(id)
-          ''')
-          .eq('is_active', true)
+          .select('*, rooms(*)')
           .order('created_at', ascending: false);
 
-      return response.map((item) {
+      return hotelsResponse.map((item) {
         final hotel = Hotel.fromMap(item);
-        final isRecommended = item['recommendations'] != null && 
-                             (item['recommendations'] as List).isNotEmpty;
-        
+        final isRecommended = recommendedIds.contains(hotel.id);
         return {
           'hotel': hotel,
           'isRecommended': isRecommended,
-          'recommendationId': isRecommended 
-              ? (item['recommendations'] as List).first['id'] 
-              : null,
+          'recommendationId': isRecommended ? hotel.id : null,
         };
       }).toList();
     } catch (e) {

@@ -5,17 +5,40 @@ import 'package:provider/provider.dart';
 import 'package:quickalert/models/quickalert_type.dart';
 import 'package:quickalert/widgets/quickalert_dialog.dart';
 
-class AdminWrapper extends StatelessWidget {
+class AdminWrapper extends StatefulWidget {
   const AdminWrapper({super.key});
+
+  @override
+  State<AdminWrapper> createState() => _AdminWrapperState();
+}
+
+class _AdminWrapperState extends State<AdminWrapper> with TickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    final adminWrapperProvider = Provider.of<AdminWrapperProvider>(context, listen: false);
+    _tabController = TabController(length: adminWrapperProvider.tabs.length, vsync: this);
+    
+    // Use post-frame callback to avoid calling during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      adminWrapperProvider.setTabController(_tabController);
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final adminWrapperProvider = Provider.of<AdminWrapperProvider>(context);
     final theme = Theme.of(context);
 
-    return DefaultTabController(
-      length: adminWrapperProvider.tabs.length,
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
           elevation: 0,
@@ -61,6 +84,7 @@ class AdminWrapper extends StatelessWidget {
             ),
           ],
           bottom: TabBar(
+            controller: _tabController,
             isScrollable: true,
             labelColor: theme.colorScheme.primary,
             unselectedLabelColor: theme.textTheme.bodyLarge?.color,
@@ -74,13 +98,13 @@ class AdminWrapper extends StatelessWidget {
           ),
         ),
         body: TabBarView(
-          // physics:
-              // const NeverScrollableScrollPhysics(), // optional: control swipe
+          controller: _tabController,
+          // physics: const NeverScrollableScrollPhysics(), // optional: control swipe
           children: adminWrapperProvider.tabs
               .map((tab) => tab['child'] as Widget)
               .toList(),
         ),
-      ),
+      
     );
   }
 }
