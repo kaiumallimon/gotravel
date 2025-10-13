@@ -3,6 +3,7 @@ import 'package:gotravel/data/models/user_account.dart';
 import 'package:gotravel/data/services/local/hive_service.dart';
 import 'package:gotravel/presentation/views/admin/hotels/pages/hotels_page.dart';
 import 'package:gotravel/presentation/views/admin/packages/pages/packages_page.dart';
+import 'package:gotravel/presentation/views/admin/recommendations/pages/admin_recommendations_page.dart';
 import 'package:gotravel/presentation/views/admin/users/pages/admin_manage_users.dart';
 
 class AdminWrapperProvider extends ChangeNotifier {
@@ -32,5 +33,6 @@ class AdminWrapperProvider extends ChangeNotifier {
     {"title": "Packages", "child": AdminPackagesPage()},
     {"title": "Hotels", "child": AdminHotelsPage()},
     {"title": "Users", "child": AdminManageUsers()},
+    {"title": "Recommendations", "child": AdminRecommendationsPage()},
   ];
 }

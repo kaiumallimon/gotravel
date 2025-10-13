@@ -9,6 +9,7 @@ import 'package:gotravel/presentation/views/admin/hotels/pages/add_hotel_page.da
 import 'package:gotravel/presentation/views/admin/hotels/pages/detailed_hotel_page.dart';
 import 'package:gotravel/presentation/views/admin/packages/pages/add_package_page.dart';
 import 'package:gotravel/presentation/views/admin/packages/pages/detailed_package_page.dart';
+import 'package:gotravel/presentation/views/admin/recommendations/pages/admin_recommendations_page.dart';
 import 'package:gotravel/presentation/views/splash/splash_page.dart';
 import 'package:gotravel/presentation/views/user/user_wrapper.dart';
 import 'package:gotravel/presentation/views/welcome/welcome_page.dart';
@@ -141,6 +142,18 @@ class AppRouter {
                 child: DetailedPackagePage(
                   package: package,
                 ),
+                transitionsBuilder: _slideTransition,
+              );
+            },
+          ),
+
+          /// Recommendations route
+          GoRoute(
+            path: AppRoutes.recommendations,
+            pageBuilder: (context, state) {
+              return CustomTransitionPage(
+                key: state.pageKey,
+                child: const AdminRecommendationsPage(),
                 transitionsBuilder: _slideTransition,
               );
             },

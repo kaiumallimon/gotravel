@@ -9,4 +9,10 @@ class AppRoutes {
   static const String detailedHotel = '/detailed-hotel';
   static const String addPackage = '/add-package';
   static const String detailedPackage = '/detailed-package';
+  static const String recommendations = '/recommendations';
+  
+  // User routes
+  static const String userHome = '/user-home';
+  static const String userPackages = '/user-packages';
+  static const String userProfile = '/user-profile';
 }
