@@ -3,13 +3,28 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gotravel/presentation/providers/add_package_provider.dart';
+import 'package:gotravel/presentation/providers/places_provider.dart';
 import 'package:gotravel/presentation/widgets/custom_button.dart';
 import 'package:gotravel/presentation/widgets/custom_text_area.dart';
 import 'package:gotravel/presentation/widgets/custom_text_field.dart';
 import 'package:provider/provider.dart';
 
-class AdminAddPackagePage extends StatelessWidget {
+class AdminAddPackagePage extends StatefulWidget {
   const AdminAddPackagePage({super.key});
+
+  @override
+  State<AdminAddPackagePage> createState() => _AdminAddPackagePageState();
+}
+
+class _AdminAddPackagePageState extends State<AdminAddPackagePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Load places when page opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<PlacesProvider>(context, listen: false).loadPlaces();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -138,6 +153,65 @@ class AdminAddPackagePage extends StatelessWidget {
               CustomTextField(
                 controller: addPackageProvider.countryController,
                 labelText: "Country",
+              ),
+
+              const SizedBox(height: 10),
+
+              // Place Selection
+              Consumer<PlacesProvider>(
+                builder: (context, placesProvider, child) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Associated Place (Optional)",
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: addPackageProvider.selectedPlaceId,
+                            hint: const Text("Select a place (optional)"),
+                            isExpanded: true,
+                            onChanged: (String? newValue) {
+                              addPackageProvider.selectedPlaceId = newValue;
+                            },
+                            items: [
+                              const DropdownMenuItem<String>(
+                                value: null,
+                                child: Text("No place selected"),
+                              ),
+                              ...placesProvider.places.map<DropdownMenuItem<String>>((place) {
+                                return DropdownMenuItem<String>(
+                                  value: place.id,
+                                  child: Text(
+                                    "${place.name} - ${place.country}",
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                );
+                              }).toList(),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Link this package to a specific place for better organization",
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
 
               const SizedBox(height: 10),

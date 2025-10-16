@@ -1,5 +1,6 @@
 import 'package:gotravel/data/models/place_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:io';
 
 class PlaceService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -228,6 +229,115 @@ class PlaceService {
       return data.map((place) => PlaceModel.fromMap(place)).toList();
     } catch (e) {
       throw Exception('Failed to filter places: $e');
+    }
+  }
+
+  // Admin methods for managing places
+
+  /// Fetch all places for admin (including inactive)
+  Future<List<PlaceModel>> getAllPlaces() async {
+    try {
+      final response = await _supabase
+          .from('places')
+          .select('*')
+          .order('created_at', ascending: false);
+
+      final List data = response;
+      return data.map((place) => PlaceModel.fromMap(place)).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch all places: $e');
+    }
+  }
+
+  /// Add a new place
+  Future<PlaceModel> addPlace(PlaceModel place) async {
+    try {
+      final response = await _supabase
+          .from('places')
+          .insert(place.toMap())
+          .select()
+          .single();
+
+      return PlaceModel.fromMap(response);
+    } catch (e) {
+      throw Exception('Failed to add place: $e');
+    }
+  }
+
+  /// Update an existing place
+  Future<PlaceModel> updatePlace(PlaceModel place) async {
+    try {
+      final response = await _supabase
+          .from('places')
+          .update(place.toMap())
+          .eq('id', place.id)
+          .select()
+          .single();
+
+      return PlaceModel.fromMap(response);
+    } catch (e) {
+      throw Exception('Failed to update place: $e');
+    }
+  }
+
+  /// Delete a place
+  Future<void> deletePlace(String placeId) async {
+    try {
+      await _supabase
+          .from('places')
+          .delete()
+          .eq('id', placeId);
+    } catch (e) {
+      throw Exception('Failed to delete place: $e');
+    }
+  }
+
+  /// Toggle place active status
+  Future<PlaceModel> togglePlaceStatus(String placeId, bool isActive) async {
+    try {
+      final response = await _supabase
+          .from('places')
+          .update({'is_active': isActive})
+          .eq('id', placeId)
+          .select()
+          .single();
+
+      return PlaceModel.fromMap(response);
+    } catch (e) {
+      throw Exception('Failed to toggle place status: $e');
+    }
+  }
+
+  /// Toggle place featured status
+  Future<PlaceModel> toggleFeaturedStatus(String placeId, bool isFeatured) async {
+    try {
+      final response = await _supabase
+          .from('places')
+          .update({'is_featured': isFeatured})
+          .eq('id', placeId)
+          .select()
+          .single();
+
+      return PlaceModel.fromMap(response);
+    } catch (e) {
+      throw Exception('Failed to toggle featured status: $e');
+    }
+  }
+
+  /// Upload image to Supabase storage
+  Future<String> uploadImage(String filePath, String fileName) async {
+    try {
+      // Add timestamp to filename to avoid conflicts
+      final timestampedFileName = '${DateTime.now().millisecondsSinceEpoch}_$fileName';
+      
+      await _supabase.storage
+          .from('cdn')
+          .upload(timestampedFileName, File(filePath));
+
+      final publicUrl = _supabase.storage.from('cdn').getPublicUrl(timestampedFileName);
+      return publicUrl;
+    } catch (error) {
+      throw Exception('Failed to upload image: $error');
     }
   }
 }

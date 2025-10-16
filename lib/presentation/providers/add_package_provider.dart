@@ -28,6 +28,14 @@ class AddPackageProvider extends ChangeNotifier {
   final TextEditingController contactPhoneController = TextEditingController();
   final TextEditingController jsonController = TextEditingController();
 
+  // Place selection
+  String? _selectedPlaceId;
+  String? get selectedPlaceId => _selectedPlaceId;
+  set selectedPlaceId(String? placeId) {
+    _selectedPlaceId = placeId;
+    notifyListeners();
+  }
+
   // Dynamic activities
   final List<Map<String, TextEditingController>> activityControllers = [];
 
@@ -217,6 +225,7 @@ class AddPackageProvider extends ChangeNotifier {
       "destination": destinationController.text,
       "country": countryController.text,
       "category": categoryController.text,
+      "place_id": _selectedPlaceId,
       "duration_days": int.tryParse(durationController.text) ?? 0,
       "price": double.tryParse(priceController.text) ?? 0.0,
       "currency": currencyController.text,

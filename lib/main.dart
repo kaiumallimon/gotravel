@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gotravel/core/routes/app_router.dart';
 import 'package:gotravel/presentation/providers/admin_hotels_provider.dart';
 import 'package:gotravel/presentation/providers/admin_packages_provider.dart';
+import 'package:gotravel/presentation/providers/admin_places_provider.dart';
 import 'package:gotravel/presentation/providers/admin_wrapper_provider.dart';
 import 'package:gotravel/presentation/providers/welcome_viewmodel.dart';
 import 'package:gotravel/presentation/providers/sign_in_provider.dart';
@@ -77,6 +78,9 @@ class MyApp extends StatelessWidget {
 
         /// Admin Packages Provider
         ChangeNotifierProvider(create: (context) => AdminPackagesProvider()),
+
+        /// Admin Places Provider
+        ChangeNotifierProvider(create: (context) => AdminPlacesProvider()),
 
         /// Admin Users Provider
         ChangeNotifierProvider(create: (context) => AdminUsersProvider()),

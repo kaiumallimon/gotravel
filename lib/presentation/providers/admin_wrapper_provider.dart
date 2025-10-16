@@ -3,6 +3,7 @@ import 'package:gotravel/data/models/user_account.dart';
 import 'package:gotravel/data/services/local/hive_service.dart';
 import 'package:gotravel/presentation/views/admin/hotels/pages/hotels_page.dart';
 import 'package:gotravel/presentation/views/admin/packages/pages/packages_page.dart';
+import 'package:gotravel/presentation/views/admin/places/pages/places_page.dart';
 import 'package:gotravel/presentation/views/admin/recommendations/pages/admin_recommendations_page.dart';
 import 'package:gotravel/presentation/views/admin/users/pages/admin_manage_users.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -47,6 +48,7 @@ class AdminWrapperProvider extends ChangeNotifier {
   final List<Map<String, dynamic>> tabs = [
     {"title": "Home", "child": const AdminHomeTab()},
     {"title": "Packages", "child": AdminPackagesPage()},
+    {"title": "Places", "child": AdminPlacesPage()},
     {"title": "Hotels", "child": AdminHotelsPage()},
     {"title": "Users", "child": AdminManageUsers()},
     {"title": "Recommendations", "child": AdminRecommendationsPage()},
@@ -57,6 +59,7 @@ class AdminWrapperProvider extends ChangeNotifier {
       final supabase = Supabase.instance.client;
       final results = await Future.wait([
         supabase.from('packages').select('id'),
+        supabase.from('places').select('id'),
         supabase.from('hotels').select('id'),
         supabase.from('users').select('id'),
         supabase.from('recommendations').select('item_id').eq('item_type', 'package'),
@@ -64,14 +67,16 @@ class AdminWrapperProvider extends ChangeNotifier {
       ]);
       return {
         'packages': (results[0] as List).length,
-        'hotels': (results[1] as List).length,
-        'users': (results[2] as List).length,
-        'recommendedPackages': (results[3] as List).length,
-        'recommendedHotels': (results[4] as List).length,
+        'places': (results[1] as List).length,
+        'hotels': (results[2] as List).length,
+        'users': (results[3] as List).length,
+        'recommendedPackages': (results[4] as List).length,
+        'recommendedHotels': (results[5] as List).length,
       };
     } catch (e) {
       return {
         'packages': 0,
+        'places': 0,
         'hotels': 0,
         'users': 0,
         'recommendedPackages': 0,

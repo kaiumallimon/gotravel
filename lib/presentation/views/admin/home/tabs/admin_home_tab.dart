@@ -124,6 +124,12 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
         'color': theme.colorScheme.primary,
       },
       {
+        'label': 'Total Places',
+        'value': stats!['places'] ?? 0,
+        'icon': Icons.location_on_outlined,
+        'color': Colors.green,
+      },
+      {
         'label': 'Total Hotels',
         'value': stats!['hotels'] ?? 0,
         'icon': Icons.hotel_outlined,
