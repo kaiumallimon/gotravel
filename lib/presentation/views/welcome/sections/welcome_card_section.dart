@@ -1,7 +1,5 @@
 import 'package:blur/blur.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:gotravel/core/routes/app_routes.dart';
 import 'package:gotravel/presentation/providers/welcome_viewmodel.dart';
 import 'package:provider/provider.dart';
 

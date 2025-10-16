@@ -107,17 +107,13 @@ class _AdminHomeTabState extends State<AdminHomeTab> {
   Widget _buildStatsGrid(ThemeData theme) {
     final width = MediaQuery.of(context).size.width;
     int crossAxisCount;
-    double childAspectRatio;
     
     if (width >= 900) {
       crossAxisCount = 2;
-      childAspectRatio = 2.5;
     } else if (width >= 600) {
       crossAxisCount = 2;
-      childAspectRatio = 2.2;
     } else {
       crossAxisCount = 2; // Keep 2 cards per row even on mobile
-      childAspectRatio = 1.8;
     }
 
     final statsData = [

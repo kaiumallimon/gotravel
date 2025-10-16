@@ -14,6 +14,11 @@ import 'package:gotravel/presentation/providers/admin_recommendations_provider.d
 import 'package:gotravel/presentation/providers/user_home_provider.dart';
 import 'package:gotravel/presentation/providers/user_packages_provider.dart';
 import 'package:gotravel/presentation/providers/user_profile_provider.dart';
+import 'package:gotravel/presentation/providers/places_provider.dart';
+import 'package:gotravel/presentation/providers/booking_provider.dart';
+import 'package:gotravel/presentation/providers/payment_provider.dart';
+import 'package:gotravel/presentation/providers/search_provider.dart';
+import 'package:gotravel/presentation/providers/user_favorites_provider.dart';
 import 'package:gotravel/theming/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -90,6 +95,21 @@ class MyApp extends StatelessWidget {
 
         /// User Profile Provider
         ChangeNotifierProvider(create: (context) => UserProfileProvider()),
+
+        /// Places Provider
+        ChangeNotifierProvider(create: (context) => PlacesProvider()),
+
+        /// Booking Provider
+        ChangeNotifierProvider(create: (context) => BookingProvider()),
+
+        /// Payment Provider
+        ChangeNotifierProvider(create: (context) => PaymentProvider()),
+
+        /// Search Provider
+        ChangeNotifierProvider(create: (context) => SearchProvider()),
+
+        /// User Favorites Provider
+        ChangeNotifierProvider(create: (context) => UserFavoritesProvider()),
       ],
       child: MaterialApp.router(
         title: 'GoTravel',

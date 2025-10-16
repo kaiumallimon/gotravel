@@ -12,13 +12,16 @@ class UserHomeProvider extends ChangeNotifier {
   List<Hotel> _recommendedHotels = [];
   List<String> _countries = [];
   List<String> _categories = [];
+  Map<String, int>? _stats;
   bool _isLoading = false;
   String? _error;
 
   List<TourPackage> get recommendedPackages => _recommendedPackages;
+  List<TourPackage> get packages => _recommendedPackages; // Alias for compatibility
   List<Hotel> get recommendedHotels => _recommendedHotels;
   List<String> get countries => _countries;
   List<String> get categories => _categories;
+  Map<String, int>? get stats => _stats;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -40,6 +43,13 @@ class UserHomeProvider extends ChangeNotifier {
       _recommendedHotels = results[1] as List<Hotel>;
       _countries = results[2] as List<String>;
       _categories = results[3] as List<String>;
+      
+      // Load stats
+      _stats = {
+        'packages': _recommendedPackages.length,
+        'hotels': _recommendedHotels.length,
+        'countries': _countries.length,
+      };
 
       _error = null;
     } catch (e) {

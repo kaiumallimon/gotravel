@@ -9,6 +9,7 @@ class TourPackage {
   final String destination;
   final String country;
   final String category;
+  final String? placeId; // Foreign key to places table
   final int durationDays;
   final double price;
   final String currency;

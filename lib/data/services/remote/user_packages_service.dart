@@ -168,4 +168,24 @@ class UserPackagesService {
       throw Exception('Failed to search packages: $e');
     }
   }
+
+  /// Get package by ID
+  Future<TourPackage> getPackageById(String packageId) async {
+    try {
+      final response = await _supabase
+          .from('packages')
+          .select('''
+            *, 
+            package_activities(*),
+            package_dates(*)
+          ''')
+          .eq('id', packageId)
+          .eq('is_active', true)
+          .single();
+
+      return TourPackage.fromMap(response);
+    } catch (e) {
+      throw Exception('Failed to fetch package details: $e');
+    }
+  }
 }

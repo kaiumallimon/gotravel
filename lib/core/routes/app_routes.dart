@@ -15,4 +15,17 @@ class AppRoutes {
   static const String userHome = '/user-home';
   static const String userPackages = '/user-packages';
   static const String userProfile = '/user-profile';
+  
+  // New user routes
+  static const String places = '/places';
+  static const String placeDetails = '/place-details';
+  static const String search = '/search';
+  static const String searchResults = '/search-results';
+  static const String packageDetails = '/package-details';
+  static const String hotelDetails = '/hotel-details';
+  static const String booking = '/booking';
+  static const String bookingDetails = '/booking-details';
+  static const String payment = '/payment';
+  static const String paymentSuccess = '/payment-success';
+  static const String favorites = '/favorites';
 }

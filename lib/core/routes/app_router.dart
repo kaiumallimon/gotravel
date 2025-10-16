@@ -12,6 +12,10 @@ import 'package:gotravel/presentation/views/admin/packages/pages/detailed_packag
 import 'package:gotravel/presentation/views/admin/recommendations/pages/admin_recommendations_page.dart';
 import 'package:gotravel/presentation/views/splash/splash_page.dart';
 import 'package:gotravel/presentation/views/user/user_wrapper.dart';
+import 'package:gotravel/presentation/views/user/pages/package_details_page.dart';
+import 'package:gotravel/presentation/views/user/pages/user_packages_page.dart';
+import 'package:gotravel/presentation/views/user/pages/booking_page.dart';
+import 'package:gotravel/presentation/views/user/pages/payment_success_page.dart';
 import 'package:gotravel/presentation/views/welcome/welcome_page.dart';
 
 import 'package:gotravel/presentation/views/auth/sign_in_page.dart';
@@ -159,6 +163,56 @@ class AppRouter {
             },
           ),
         ],
+      ),
+      
+      /// Packages route
+      GoRoute(
+        path: '/packages',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const UserPackagesPage(),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+      
+      /// Package details route
+      GoRoute(
+        path: '/package-details/:id',
+        pageBuilder: (context, state) {
+          final packageId = state.pathParameters['id']!;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: PackageDetailsPage(packageId: packageId),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+      
+      /// Booking route
+      GoRoute(
+        path: '/booking/:id',
+        pageBuilder: (context, state) {
+          final packageId = state.pathParameters['id']!;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: BookingPage(packageId: packageId),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+      
+      /// Payment success route
+      GoRoute(
+        path: '/payment-success',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const PaymentSuccessPage(),
+            transitionsBuilder: _slideTransition,
+          );
+        },
       ),
 
       /// Add Hotel route

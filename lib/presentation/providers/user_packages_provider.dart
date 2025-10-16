@@ -8,6 +8,7 @@ class UserPackagesProvider extends ChangeNotifier {
   List<TourPackage> _packages = [];
   List<String> _countries = [];
   List<String> _categories = [];
+  TourPackage? _selectedPackage;
   bool _isLoading = false;
   String? _error;
   String _selectedCountry = 'All';
@@ -16,6 +17,7 @@ class UserPackagesProvider extends ChangeNotifier {
   List<TourPackage> get packages => _packages;
   List<String> get countries => ['All', ..._countries];
   List<String> get categories => ['All', ..._categories];
+  TourPackage? get selectedPackage => _selectedPackage;
   bool get isLoading => _isLoading;
   String? get error => _error;
   String get selectedCountry => _selectedCountry;
@@ -115,5 +117,22 @@ class UserPackagesProvider extends ChangeNotifier {
     _selectedCategory = 'All';
     notifyListeners();
     _applyFilters();
+  }
+
+  Future<void> loadPackageDetails(String packageId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      _selectedPackage = await _service.getPackageById(packageId);
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+      _selectedPackage = null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }

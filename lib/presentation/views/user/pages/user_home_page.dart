@@ -1,9 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:gotravel/data/models/hotel_model.dart';
 import 'package:gotravel/data/models/tour_package_model.dart';
 import 'package:gotravel/presentation/providers/user_home_provider.dart';
+import 'package:gotravel/presentation/providers/places_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 
 class UserHomePage extends StatefulWidget {
   const UserHomePage({super.key});
@@ -18,206 +19,242 @@ class _UserHomePageState extends State<UserHomePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<UserHomeProvider>(context, listen: false).loadHomeData(context);
+      Provider.of<PlacesProvider>(context, listen: false).loadPlaces();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final provider = Provider.of<UserHomeProvider>(context);
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
-        child: provider.isLoading
-            ? _buildLoading()
-            : RefreshIndicator(
-                onRefresh: () => provider.refresh(context),
-                child: CustomScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    // App Bar
-                    SliverAppBar(
-                      expandedHeight: 120,
-                      floating: false,
-                      pinned: true,
-                      backgroundColor: theme.colorScheme.surface,
-                      surfaceTintColor: Colors.transparent,
-                      flexibleSpace: FlexibleSpaceBar(
-                        titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
-                        title: Text(
-                          'Discover',
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                        expandedTitleScale: 1.3,
-                      ),
-                      actions: [
-                        IconButton(
-                          icon: Icon(CupertinoIcons.search, color: theme.colorScheme.primary),
-                          onPressed: () {
-                            // TODO: Implement search
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(CupertinoIcons.bell, color: theme.colorScheme.primary),
-                          onPressed: () {
-                            // TODO: Implement notifications
-                          },
-                        ),
-                      ],
+        child: Consumer<UserHomeProvider>(
+          builder: (context, provider, child) {
+            return CustomScrollView(
+              slivers: [
+                // App Bar with search and notifications
+                SliverAppBar(
+                  expandedHeight: 0,
+                  floating: true,
+                  backgroundColor: theme.colorScheme.surface,
+                  elevation: 0,
+                  title: Text(
+                    'Discover',
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
                     ),
-
-                    // Overview Stats
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: _buildOverviewStats(theme, provider),
+                  ),
+                  actions: [
+                    IconButton(
+                      onPressed: () {
+                        // TODO: Navigate to search
+                      },
+                      icon: Icon(
+                        CupertinoIcons.search,
+                        color: theme.colorScheme.primary,
                       ),
                     ),
-
-                    // Recommended Packages Section
-                    if (provider.recommendedPackages.isNotEmpty) ...[
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Recommended Packages',
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  // TODO: Navigate to packages page
-                                },
-                                child: const Text('View All'),
-                              ),
-                            ],
-                          ),
-                        ),
+                    IconButton(
+                      onPressed: () {
+                        // TODO: Navigate to notifications
+                      },
+                      icon: Icon(
+                        CupertinoIcons.bell,
+                        color: theme.colorScheme.primary,
                       ),
-                      SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: 280,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: provider.recommendedPackages.length,
-                            itemBuilder: (context, index) {
-                              return _buildPackageCard(
-                                provider.recommendedPackages[index],
-                                theme,
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-
-                    const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-                    // Recommended Hotels Section
-                    if (provider.recommendedHotels.isNotEmpty) ...[
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Top Hotels',
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  // TODO: Navigate to hotels page
-                                },
-                                child: const Text('View All'),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: 240,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            itemCount: provider.recommendedHotels.length,
-                            itemBuilder: (context, index) {
-                              return _buildHotelCard(
-                                provider.recommendedHotels[index],
-                                theme,
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-
-                    // Countries Section
-                    if (provider.countries.isNotEmpty) ...[
-                      const SliverToBoxAdapter(child: SizedBox(height: 24)),
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            'Popular Destinations',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: 120,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                            itemCount: provider.countries.take(10).length,
-                            itemBuilder: (context, index) {
-                              return _buildCountryChip(
-                                provider.countries[index],
-                                theme,
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-
-                    const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                    ),
+                    const SizedBox(width: 8),
                   ],
                 ),
-              ),
+
+                // Search Section
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: _buildSearchSection(theme),
+                  ),
+                ),
+
+                // Explore the World Section  
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _buildExploreWorldSection(theme, provider),
+                  ),
+                ),
+
+                // Recommended Packages Section
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: _buildRecommendedPackagesSection(theme, provider),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildLoading() {
-    return const Center(
+  Widget _buildSearchSection(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
-          Text('Loading...'),
+          Text(
+            'Where do you want to go?',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Discover amazing places and packages',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          // Search bar
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.colorScheme.shadow.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextField(
+              readOnly: true,
+              onTap: () {
+                context.push('/search');
+              },
+              decoration: InputDecoration(
+                hintText: 'Search destinations, packages...',
+                hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                prefixIcon: Icon(
+                  CupertinoIcons.search,
+                  color: theme.colorScheme.primary,
+                  size: 20,
+                ),
+                suffixIcon: Icon(
+                  CupertinoIcons.mic,
+                  color: theme.colorScheme.onSurfaceVariant,
+                  size: 20,
+                ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Quick categories
+          Row(
+            children: [
+              Expanded(
+                child: _buildQuickCategory(
+                  icon: CupertinoIcons.location_solid,
+                  label: 'Places',
+                  color: Colors.blue,
+                  theme: theme,
+                  onTap: () {
+                    context.push('/places');
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildQuickCategory(
+                  icon: CupertinoIcons.bag,
+                  label: 'Packages',
+                  color: Colors.green,
+                  theme: theme,
+                  onTap: () {
+                    context.push('/packages');
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildQuickCategory(
+                  icon: CupertinoIcons.building_2_fill,
+                  label: 'Hotels',
+                  color: Colors.orange,
+                  theme: theme,
+                  onTap: () {
+                    context.push('/hotels');
+                  },
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildOverviewStats(ThemeData theme, UserHomeProvider provider) {
+  Widget _buildQuickCategory({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required ThemeData theme,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withOpacity(0.2),
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: color,
+              size: 24,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExploreWorldSection(ThemeData theme, UserHomeProvider provider) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -229,14 +266,7 @@ class _UserHomePageState extends State<UserHomePage> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.primary.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,33 +280,39 @@ class _UserHomePageState extends State<UserHomePage> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Discover amazing packages and hotels across ${provider.totalCountries} countries',
+            'Discover amazing packages and hotels across 1 countries',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: Colors.white.withOpacity(0.9),
             ),
           ),
           const SizedBox(height: 20),
+          
           Row(
             children: [
               Expanded(
-                child: _buildStatItem(
-                  'Packages',
-                  '${provider.totalPackages}+',
-                  CupertinoIcons.cube_box,
+                child: _buildStatCard(
+                  icon: CupertinoIcons.cube_box,
+                  value: '${provider.stats?['packages'] ?? 1}+',
+                  label: 'Packages',
+                  theme: theme,
                 ),
               ),
+              const SizedBox(width: 16),
               Expanded(
-                child: _buildStatItem(
-                  'Hotels',
-                  '${provider.totalHotels}+',
-                  CupertinoIcons.building_2_fill,
+                child: _buildStatCard(
+                  icon: CupertinoIcons.building_2_fill,
+                  value: '${provider.stats?['hotels'] ?? 1}+',
+                  label: 'Hotels',
+                  theme: theme,
                 ),
               ),
+              const SizedBox(width: 16),
               Expanded(
-                child: _buildStatItem(
-                  'Countries',
-                  '${provider.totalCountries}',
-                  CupertinoIcons.globe,
+                child: _buildStatCard(
+                  icon: CupertinoIcons.globe,
+                  value: '1',
+                  label: 'Countries',
+                  theme: theme,
                 ),
               ),
             ],
@@ -286,262 +322,348 @@ class _UserHomePageState extends State<UserHomePage> {
     );
   }
 
-  Widget _buildStatItem(String label, String value, IconData icon) {
-    return Column(
-      children: [
-        Icon(
-          icon,
-          color: Colors.white,
-          size: 28,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: const TextStyle(
+  Widget _buildStatCard({
+    required IconData icon,
+    required String value,
+    required String label,
+    required ThemeData theme,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            icon,
             color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+            size: 28,
           ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.8),
-            fontSize: 12,
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: theme.textTheme.titleLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: Colors.white.withOpacity(0.9),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecommendedPackagesSection(ThemeData theme, UserHomeProvider provider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Recommended Packages',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                context.push('/packages');
+              },
+              child: Text(
+                'View All',
+                style: TextStyle(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
         ),
+        const SizedBox(height: 16),
+        
+        if (provider.isLoading)
+          const Center(
+            child: CircularProgressIndicator(),
+          )
+        else if (provider.packages.isEmpty)
+          Center(
+            child: Column(
+              children: [
+                Icon(
+                  CupertinoIcons.bag,
+                  size: 64,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'No packages available',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          SizedBox(
+            height: 280,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: provider.packages.length,
+              itemBuilder: (context, index) {
+                final package = provider.packages[index];
+                return Padding(
+                  padding: EdgeInsets.only(
+                    right: index < provider.packages.length - 1 ? 16 : 0,
+                  ),
+                  child: _buildPackageCard(package, theme),
+                );
+              },
+            ),
+          ),
       ],
     );
   }
 
   Widget _buildPackageCard(TourPackage package, ThemeData theme) {
-    return Container(
-      width: 200,
-      margin: const EdgeInsets.only(right: 16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Image
-          Container(
-            height: 120,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              image: DecorationImage(
-                image: NetworkImage(package.coverImage),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  package.name,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      CupertinoIcons.location,
-                      size: 14,
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        package.destination,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.6),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${package.currency}${package.price.toInt()}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Icon(
-                          CupertinoIcons.star_fill,
-                          size: 14,
-                          color: Colors.amber,
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          '${package.rating}',
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHotelCard(Hotel hotel, ThemeData theme) {
-    return Container(
-      width: 180,
-      margin: const EdgeInsets.only(right: 16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.shadow.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Image
-          Container(
-            height: 100,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              image: DecorationImage(
-                image: NetworkImage(hotel.images.isNotEmpty ? hotel.images.first : ''),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  hotel.name,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      CupertinoIcons.location,
-                      size: 14,
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        hotel.city,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.6),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          CupertinoIcons.star_fill,
-                          size: 14,
-                          color: Colors.amber,
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          '${hotel.rating}',
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                    Text(
-                      '${hotel.rooms.isNotEmpty ? hotel.rooms.first.currency : ''}\$${hotel.rooms.isNotEmpty ? hotel.rooms.first.pricePerNight.toInt() : 0}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCountryChip(String country, ThemeData theme) {
     return GestureDetector(
       onTap: () {
-        // TODO: Navigate to packages filtered by country
+        context.push('/package-details/${package.id}');
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        margin: const EdgeInsets.only(right: 12),
+        width: 300,
         decoration: BoxDecoration(
-          color: theme.colorScheme.primaryContainer,
-          borderRadius: BorderRadius.circular(25),
-          border: Border.all(
-            color: theme.colorScheme.primary.withOpacity(0.3),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              CupertinoIcons.location_solid,
-              size: 16,
-              color: theme.colorScheme.onPrimaryContainer,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              country,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer,
-                fontWeight: FontWeight.w500,
-              ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.shadow.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            children: [
+              // Package Image
+              Container(
+                height: 280,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: package.coverImage.isNotEmpty
+                      ? NetworkImage(package.coverImage)
+                      : const AssetImage('assets/images/placeholder.png') as ImageProvider,
+                  fit: BoxFit.cover,
+                ),
+                ),
+              ),
+              
+              // Gradient overlay
+              Container(
+                height: 280,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.7),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Package info
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Category badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          package.category.toUpperCase(),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 8),
+                      
+                      // Package title
+                      Text(
+                        package.name,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      
+                      const SizedBox(height: 4),
+                      
+                      // Location
+                      Row(
+                        children: [
+                          Icon(
+                            CupertinoIcons.location_solid,
+                            color: Colors.white.withOpacity(0.8),
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              package.destination,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: Colors.white.withOpacity(0.8),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 8),
+                      
+                      // Duration and price
+                      Row(
+                        children: [
+                          Icon(
+                            CupertinoIcons.calendar,
+                            color: Colors.white.withOpacity(0.8),
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${package.durationDays} days',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.white.withOpacity(0.8),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Icon(
+                            CupertinoIcons.person_2,
+                            color: Colors.white.withOpacity(0.8),
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${package.availableSlots} slots',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.white.withOpacity(0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 8),
+                      
+                      // Price
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Starting from',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: Colors.white.withOpacity(0.8),
+                                ),
+                              ),
+                              Text(
+                                '${package.currency}${package.price.toStringAsFixed(0)}',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              'View Details',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Rating badge
+              Positioned(
+                top: 16,
+                right: 16,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        CupertinoIcons.star_fill,
+                        color: Colors.yellow,
+                        size: 12,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        package.rating.toStringAsFixed(1),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
