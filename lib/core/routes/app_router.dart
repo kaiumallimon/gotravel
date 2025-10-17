@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:gotravel/core/routes/app_routes.dart';
 import 'package:gotravel/data/models/hotel_model.dart';
 import 'package:gotravel/data/models/tour_package_model.dart';
+import 'package:gotravel/data/models/booking_model.dart';
 import 'package:gotravel/presentation/views/admin/admin_wrapper.dart';
 import 'package:gotravel/presentation/views/admin/hotels/pages/add_hotel_page.dart';
 import 'package:gotravel/presentation/views/admin/hotels/pages/detailed_hotel_page.dart';
@@ -18,6 +19,7 @@ import 'package:gotravel/presentation/views/user/pages/user_packages_page.dart';
 import 'package:gotravel/presentation/views/user/pages/booking_page.dart';
 import 'package:gotravel/presentation/views/user/pages/payment_success_page.dart';
 import 'package:gotravel/presentation/views/user/pages/my_trips_page.dart';
+import 'package:gotravel/presentation/views/user/pages/booking_details_page.dart';
 import 'package:gotravel/presentation/views/user/pages/bkash_payment_page.dart';
 import 'package:gotravel/presentation/views/welcome/welcome_page.dart';
 
@@ -238,6 +240,19 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: const MyTripsPage(),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+      
+      /// Booking Details route
+      GoRoute(
+        path: '/booking-details',
+        pageBuilder: (context, state) {
+          final booking = state.extra as BookingModel;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: BookingDetailsPage(booking: booking),
             transitionsBuilder: _slideTransition,
           );
         },
