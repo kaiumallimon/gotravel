@@ -65,7 +65,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
             _buildRecentlyAddedPlacesSection(theme),
             _buildRecentlyAddedPackagesSection(theme),
             _buildRecentlyAddedHotelsSection(theme),
-            const SliverToBoxAdapter(child: SizedBox(height: 80)),
+            const SliverToBoxAdapter(child: SizedBox(height: 200)),
           ],
         ),
       ),
@@ -73,100 +73,198 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
   }
 
   Widget _buildHeaderSection(ThemeData theme) {
-    return SliverToBoxAdapter(
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(20, 48, 20, 24),
-        child: Consumer2<UserProfileProvider, LocationProvider>(
-          builder: (context, profileProvider, locationProvider, child) {
-            final userName = profileProvider.userAccount?.name ?? 'User';
-            final initials = _getInitials(userName);
-            
-            return Row(
-              children: [
-                Expanded(
+    return Consumer2<UserProfileProvider, LocationProvider>(
+      builder: (context, profileProvider, locationProvider, child) {
+        final userName = profileProvider.userAccount?.name ?? 'User';
+        final initials = _getInitials(userName);
+        
+        return SliverAppBar(
+          expandedHeight: 160,
+          floating: false,
+          pinned: true,
+          backgroundColor: theme.colorScheme.surface,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          flexibleSpace: LayoutBuilder(
+            builder: (context, constraints) {
+              // Calculate how much the app bar is expanded
+              final expandRatio = (constraints.maxHeight - kToolbarHeight) / 
+                                  (160 - kToolbarHeight);
+              final isExpanded = expandRatio > 0.5;
+              
+              return FlexibleSpaceBar(
+                titlePadding: EdgeInsets.zero,
+                centerTitle: false,
+                background: Container(
+                  padding: const EdgeInsets.fromLTRB(20, 48, 20, 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Text(
-                        'Welcome back,',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        userName,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 8),
-                      GestureDetector(
-                        onTap: () => locationProvider.getCurrentLocation(),
-                        child: Row(
-                          children: [
-                            Icon(
-                              CupertinoIcons.location_solid,
-                              color: theme.colorScheme.primary,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: locationProvider.isLoading
-                                  ? Text(
-                                      'Getting location...',
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.colorScheme.onSurfaceVariant,
-                                      ),
-                                    )
-                                  : Text(
-                                      locationProvider.currentAddress,
-                                      style: theme.textTheme.bodySmall?.copyWith(
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Welcome back,',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  userName,
+                                  style: theme.textTheme.headlineSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 8),
+                                GestureDetector(
+                                  onTap: () => locationProvider.getCurrentLocation(),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        CupertinoIcons.location_solid,
                                         color: theme.colorScheme.primary,
-                                        fontWeight: FontWeight.w500,
+                                        size: 16,
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: locationProvider.isLoading
+                                            ? Text(
+                                                'Getting location...',
+                                                style: theme.textTheme.bodySmall?.copyWith(
+                                                  color: theme.colorScheme.onSurfaceVariant,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              )
+                                            : Text(
+                                                locationProvider.currentAddress,
+                                                style: theme.textTheme.bodySmall?.copyWith(
+                                                  color: theme.colorScheme.primary,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                          Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [
+                                  theme.colorScheme.primary,
+                                  theme.colorScheme.primary.withOpacity(0.7),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                initials,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [
-                        theme.colorScheme.primary,
-                        theme.colorScheme.primary.withOpacity(0.7),
+                title: AnimatedOpacity(
+                  opacity: isExpanded ? 0.0 : 1.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => locationProvider.getCurrentLocation(),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  CupertinoIcons.location_solid,
+                                  color: theme.colorScheme.primary,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: locationProvider.isLoading
+                                      ? Text(
+                                          'Getting location...',
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            color: theme.colorScheme.onSurfaceVariant,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        )
+                                      : Text(
+                                          locationProvider.currentAddress,
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                            color: theme.colorScheme.primary,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [
+                                theme.colorScheme.primary,
+                                theme.colorScheme.primary.withOpacity(0.7),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              initials,
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      initials,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
                     ),
                   ),
                 ),
-              ],
-            );
-          },
-        ),
-      ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
