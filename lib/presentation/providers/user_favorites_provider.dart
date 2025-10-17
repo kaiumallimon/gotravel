@@ -328,6 +328,9 @@ class UserFavoritesProvider with ChangeNotifier {
   Future<void> initialize() async {
     await Future.wait([
       loadUserFavorites(),
+      loadFavoritePackages(),
+      loadFavoriteHotels(),
+      loadFavoritePlaces(),
       loadFavoriteCounts(),
     ]);
   }

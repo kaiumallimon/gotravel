@@ -96,22 +96,54 @@ class UserFavoritesService {
   /// Get favorite packages with details
   Future<List<Map<String, dynamic>>> getFavoritePackages(String userId) async {
     try {
-      final response = await _supabase
+      // First, get the favorite records
+      final favoritesResponse = await _supabase
           .from('user_favorites')
-          .select('''
-            *,
-            packages:item_id (
-              *,
-              package_activities(*),
-              package_dates(*)
-            )
-          ''')
+          .select('*')
           .eq('user_id', userId)
           .eq('item_type', 'package')
           .order('created_at', ascending: false);
 
-      final List data = response;
-      return data.map((item) => Map<String, dynamic>.from(item)).toList();
+      final List favoritesList = favoritesResponse;
+      
+      if (favoritesList.isEmpty) {
+        return [];
+      }
+
+      // Extract package IDs
+      final packageIds = favoritesList.map((f) => f['item_id']).toList();
+
+      // Fetch package details
+      final packagesResponse = await _supabase
+          .from('packages')
+          .select('''
+            *,
+            package_activities(*),
+            package_dates(*)
+          ''')
+          .inFilter('id', packageIds);
+
+      final List packagesList = packagesResponse;
+
+      // Merge favorites with package details
+      final result = <Map<String, dynamic>>[];
+      for (final favorite in favoritesList) {
+        try {
+          final packageData = packagesList.firstWhere(
+            (p) => p['id'] == favorite['item_id'],
+          );
+          
+          result.add({
+            ...Map<String, dynamic>.from(favorite),
+            'package_data': packageData,
+          });
+        } catch (e) {
+          // Package not found, skip this favorite
+          continue;
+        }
+      }
+
+      return result;
     } catch (e) {
       throw Exception('Failed to fetch favorite packages: $e');
     }
@@ -120,21 +152,53 @@ class UserFavoritesService {
   /// Get favorite hotels with details
   Future<List<Map<String, dynamic>>> getFavoriteHotels(String userId) async {
     try {
-      final response = await _supabase
+      // First, get the favorite records
+      final favoritesResponse = await _supabase
           .from('user_favorites')
-          .select('''
-            *,
-            hotels:item_id (
-              *,
-              rooms(*)
-            )
-          ''')
+          .select('*')
           .eq('user_id', userId)
           .eq('item_type', 'hotel')
           .order('created_at', ascending: false);
 
-      final List data = response;
-      return data.map((item) => Map<String, dynamic>.from(item)).toList();
+      final List favoritesList = favoritesResponse;
+      
+      if (favoritesList.isEmpty) {
+        return [];
+      }
+
+      // Extract hotel IDs
+      final hotelIds = favoritesList.map((f) => f['item_id']).toList();
+
+      // Fetch hotel details
+      final hotelsResponse = await _supabase
+          .from('hotels')
+          .select('''
+            *,
+            rooms(*)
+          ''')
+          .inFilter('id', hotelIds);
+
+      final List hotelsList = hotelsResponse;
+
+      // Merge favorites with hotel details
+      final result = <Map<String, dynamic>>[];
+      for (final favorite in favoritesList) {
+        try {
+          final hotelData = hotelsList.firstWhere(
+            (h) => h['id'] == favorite['item_id'],
+          );
+          
+          result.add({
+            ...Map<String, dynamic>.from(favorite),
+            'hotel_data': hotelData,
+          });
+        } catch (e) {
+          // Hotel not found, skip this favorite
+          continue;
+        }
+      }
+
+      return result;
     } catch (e) {
       throw Exception('Failed to fetch favorite hotels: $e');
     }
@@ -143,18 +207,50 @@ class UserFavoritesService {
   /// Get favorite places with details
   Future<List<Map<String, dynamic>>> getFavoritePlaces(String userId) async {
     try {
-      final response = await _supabase
+      // First, get the favorite records
+      final favoritesResponse = await _supabase
           .from('user_favorites')
-          .select('''
-            *,
-            places:item_id (*)
-          ''')
+          .select('*')
           .eq('user_id', userId)
           .eq('item_type', 'place')
           .order('created_at', ascending: false);
 
-      final List data = response;
-      return data.map((item) => Map<String, dynamic>.from(item)).toList();
+      final List favoritesList = favoritesResponse;
+      
+      if (favoritesList.isEmpty) {
+        return [];
+      }
+
+      // Extract place IDs
+      final placeIds = favoritesList.map((f) => f['item_id']).toList();
+
+      // Fetch place details
+      final placesResponse = await _supabase
+          .from('places')
+          .select('*')
+          .inFilter('id', placeIds);
+
+      final List placesList = placesResponse;
+
+      // Merge favorites with place details
+      final result = <Map<String, dynamic>>[];
+      for (final favorite in favoritesList) {
+        try {
+          final placeData = placesList.firstWhere(
+            (p) => p['id'] == favorite['item_id'],
+          );
+          
+          result.add({
+            ...Map<String, dynamic>.from(favorite),
+            'place_data': placeData,
+          });
+        } catch (e) {
+          // Place not found, skip this favorite
+          continue;
+        }
+      }
+
+      return result;
     } catch (e) {
       throw Exception('Failed to fetch favorite places: $e');
     }

@@ -13,6 +13,7 @@ import 'package:gotravel/presentation/views/admin/recommendations/pages/admin_re
 import 'package:gotravel/presentation/views/splash/splash_page.dart';
 import 'package:gotravel/presentation/views/user/user_wrapper.dart';
 import 'package:gotravel/presentation/views/user/pages/package_details_page.dart';
+import 'package:gotravel/presentation/views/user/pages/place_details_page.dart';
 import 'package:gotravel/presentation/views/user/pages/user_packages_page.dart';
 import 'package:gotravel/presentation/views/user/pages/booking_page.dart';
 import 'package:gotravel/presentation/views/user/pages/payment_success_page.dart';
@@ -185,6 +186,19 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: PackageDetailsPage(packageId: packageId),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+      
+      /// Place details route
+      GoRoute(
+        path: '/place-details/:id',
+        pageBuilder: (context, state) {
+          final placeId = state.pathParameters['id']!;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: PlaceDetailsPage(placeId: placeId),
             transitionsBuilder: _slideTransition,
           );
         },

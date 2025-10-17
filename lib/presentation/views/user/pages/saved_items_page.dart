@@ -5,6 +5,7 @@ import 'package:gotravel/presentation/providers/user_favorites_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:quickalert/models/quickalert_type.dart';
 import 'package:quickalert/widgets/quickalert_dialog.dart';
+import 'package:go_router/go_router.dart';
 
 class SavedItemsPage extends StatefulWidget {
   const SavedItemsPage({super.key});
@@ -207,13 +208,16 @@ class _SavedItemsPageState extends State<SavedItemsPage>
   }
 
   Widget _buildPlaceCard(Map<String, dynamic> place, UserFavoritesProvider provider, ThemeData theme) {
-    final placeName = place['name'] ?? 'Unknown Place';
-    final placeCountry = place['country'] ?? '';
-    final placeDescription = place['description'] ?? '';
-    final placeRating = (place['rating'] ?? 0.0).toDouble();
-    final images = place['images'] as List<dynamic>? ?? [];
+    // Extract the place data from the nested structure
+    final placeData = place['place_data'] as Map<String, dynamic>? ?? {};
+    
+    final placeName = placeData['name'] ?? 'Unknown Place';
+    final placeCountry = placeData['country'] ?? '';
+    final placeDescription = placeData['description'] ?? '';
+    final placeRating = (placeData['rating'] ?? 0.0).toDouble();
+    final images = placeData['images'] as List<dynamic>? ?? [];
     final imageUrl = images.isNotEmpty ? images[0] as String : '';
-    final placeId = place['id']?.toString() ?? '';
+    final placeId = placeData['id']?.toString() ?? '';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -230,7 +234,7 @@ class _SavedItemsPageState extends State<SavedItemsPage>
       ),
       child: InkWell(
         onTap: () {
-          // TODO: Navigate to place details
+          context.push('/place-details/$placeId');
         },
         borderRadius: BorderRadius.circular(16),
         child: Column(
@@ -371,13 +375,16 @@ class _SavedItemsPageState extends State<SavedItemsPage>
   }
 
   Widget _buildPackageCard(Map<String, dynamic> package, UserFavoritesProvider provider, ThemeData theme) {
-    final packageName = package['name'] ?? 'Unknown Package';
-    final packageDescription = package['description'] ?? '';
-    final packagePrice = (package['price'] ?? 0.0).toDouble();
-    final packageDuration = package['duration'] ?? 0;
-    final images = package['images'] as List<dynamic>? ?? [];
+    // Extract the package data from the nested structure
+    final packageData = package['package_data'] as Map<String, dynamic>? ?? {};
+    
+    final packageName = packageData['name'] ?? 'Unknown Package';
+    final packageDescription = packageData['description'] ?? '';
+    final packagePrice = (packageData['price'] ?? 0.0).toDouble();
+    final packageDuration = packageData['duration'] ?? 0;
+    final images = packageData['images'] as List<dynamic>? ?? [];
     final imageUrl = images.isNotEmpty ? images[0] as String : '';
-    final packageId = package['id']?.toString() ?? '';
+    final packageId = packageData['id']?.toString() ?? '';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -394,7 +401,7 @@ class _SavedItemsPageState extends State<SavedItemsPage>
       ),
       child: InkWell(
         onTap: () {
-          // TODO: Navigate to package details
+          context.push('/package-details/$packageId');
         },
         borderRadius: BorderRadius.circular(16),
         child: Column(
@@ -519,13 +526,16 @@ class _SavedItemsPageState extends State<SavedItemsPage>
   }
 
   Widget _buildHotelCard(Map<String, dynamic> hotel, UserFavoritesProvider provider, ThemeData theme) {
-    final hotelName = hotel['name'] ?? 'Unknown Hotel';
-    final hotelLocation = hotel['location'] ?? '';
-    final hotelRating = (hotel['rating'] ?? 0.0).toDouble();
-    final hotelPrice = (hotel['price_per_night'] ?? 0.0).toDouble();
-    final images = hotel['images'] as List<dynamic>? ?? [];
+    // Extract the hotel data from the nested structure
+    final hotelData = hotel['hotel_data'] as Map<String, dynamic>? ?? {};
+    
+    final hotelName = hotelData['name'] ?? 'Unknown Hotel';
+    final hotelLocation = hotelData['location'] ?? hotelData['address'] ?? '';
+    final hotelRating = (hotelData['rating'] ?? 0.0).toDouble();
+    final hotelPrice = (hotelData['price_per_night'] ?? 0.0).toDouble();
+    final images = hotelData['images'] as List<dynamic>? ?? [];
     final imageUrl = images.isNotEmpty ? images[0] as String : '';
-    final hotelId = hotel['id']?.toString() ?? '';
+    final hotelId = hotelData['id']?.toString() ?? '';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -542,7 +552,13 @@ class _SavedItemsPageState extends State<SavedItemsPage>
       ),
       child: InkWell(
         onTap: () {
-          // TODO: Navigate to hotel details
+          // Hotel details page not implemented yet
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Hotel details page coming soon!'),
+              duration: Duration(seconds: 2),
+            ),
+          );
         },
         borderRadius: BorderRadius.circular(16),
         child: Column(
