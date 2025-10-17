@@ -24,6 +24,16 @@ class PlacesProvider with ChangeNotifier {
   List<String> get categories => _categories;
   List<String> get countries => _countries;
   PlaceModel? get selectedPlace => _selectedPlace;
+  
+  // Get latest places (limit 5)
+  List<PlaceModel> get latestPlaces {
+    final sorted = List<PlaceModel>.from(_places);
+    sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return sorted.take(5).toList();
+  }
+  
+  // Get total places count
+  int get totalPlaces => _places.length;
 
   // Set loading state
   void _setLoading(bool loading) {
@@ -225,7 +235,8 @@ class PlacesProvider with ChangeNotifier {
   // Initialize provider
   Future<void> initialize() async {
     await Future.wait([
-      loadFeaturedPlaces(),
+      loadPlaces(),
+      loadFeaturedPlaces(limit: 5),
       loadPopularPlaces(),
       loadCategories(),
       loadCountries(),

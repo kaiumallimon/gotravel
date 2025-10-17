@@ -14,6 +14,7 @@ import 'package:gotravel/presentation/providers/admin_add_user_provider.dart';
 import 'package:gotravel/presentation/providers/admin_recommendations_provider.dart';
 import 'package:gotravel/presentation/providers/user_home_provider.dart';
 import 'package:gotravel/presentation/providers/user_packages_provider.dart';
+import 'package:gotravel/presentation/providers/user_hotels_provider.dart';
 import 'package:gotravel/presentation/providers/user_profile_provider.dart';
 import 'package:gotravel/presentation/providers/places_provider.dart';
 import 'package:gotravel/presentation/providers/booking_provider.dart';
@@ -97,6 +98,9 @@ class MyApp extends StatelessWidget {
 
         /// User Packages Provider
         ChangeNotifierProvider(create: (context) => UserPackagesProvider()),
+
+        /// User Hotels Provider
+        ChangeNotifierProvider(create: (context) => UserHotelsProvider()),
 
         /// User Profile Provider
         ChangeNotifierProvider(create: (context) => UserProfileProvider()),
