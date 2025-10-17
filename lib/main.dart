@@ -22,11 +22,13 @@ import 'package:gotravel/presentation/providers/payment_provider.dart';
 import 'package:gotravel/presentation/providers/search_provider.dart';
 import 'package:gotravel/presentation/providers/user_favorites_provider.dart';
 import 'package:gotravel/presentation/providers/location_provider.dart';
+import 'package:gotravel/presentation/providers/conversation_provider.dart';
 import 'package:gotravel/theming/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
 
 Future<void> main() async {
   /// Ensure Flutter bindings are initialized
@@ -45,6 +47,14 @@ Future<void> main() async {
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANONKEY']!,
   );
+
+  /// Initialize Gemini AI
+  final geminiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+  if (geminiKey.isNotEmpty && geminiKey != 'YOUR_GEMINI_API_KEY_HERE') {
+    Gemini.init(apiKey: geminiKey);
+  } else {
+    print('⚠️ Gemini API key not configured. AI responses will be limited.');
+  }
 
   /// Run the app
   runApp(const MyApp());
@@ -122,6 +132,9 @@ class MyApp extends StatelessWidget {
 
         /// Location Provider
         ChangeNotifierProvider(create: (context) => LocationProvider()),
+
+        /// Conversation Provider
+        ChangeNotifierProvider(create: (context) => ConversationProvider()),
       ],
       child: MaterialApp.router(
         title: 'GoTravel',

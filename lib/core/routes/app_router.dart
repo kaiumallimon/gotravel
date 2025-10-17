@@ -21,6 +21,7 @@ import 'package:gotravel/presentation/views/user/pages/payment_success_page.dart
 import 'package:gotravel/presentation/views/user/pages/my_trips_page.dart';
 import 'package:gotravel/presentation/views/user/pages/booking_details_page.dart';
 import 'package:gotravel/presentation/views/user/pages/bkash_webview_payment_page.dart';
+import 'package:gotravel/presentation/views/user/pages/chat_conversation_page.dart';
 import 'package:gotravel/presentation/views/welcome/welcome_page.dart';
 
 import 'package:gotravel/presentation/views/auth/sign_in_page.dart';
@@ -271,6 +272,19 @@ class AppRouter {
               idToken: extra['idToken'],
               bookingId: extra['bookingId'],
             ),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+
+      /// AI Chat Conversation route
+      GoRoute(
+        path: '/ai-chat/conversation/:conversationId',
+        pageBuilder: (context, state) {
+          final conversationId = state.pathParameters['conversationId']!;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: ChatConversationPage(conversationId: conversationId),
             transitionsBuilder: _slideTransition,
           );
         },
