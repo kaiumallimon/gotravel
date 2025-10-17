@@ -53,4 +53,32 @@ class AdminHotelsProvider extends ChangeNotifier {
       isLoading = false;
     }
   }
+
+  Future<void> deleteHotel(String hotelId, BuildContext context) async {
+    try {
+      await AdminHotelService().deleteHotel(hotelId);
+      
+      // Remove from local list
+      _hotels.removeWhere((hotel) => hotel.id == hotelId);
+      notifyListeners();
+      
+      if (context.mounted) {
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.success,
+          title: 'Success',
+          text: 'Hotel deleted successfully',
+        );
+      }
+    } catch (error) {
+      if (context.mounted) {
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'Error',
+          text: 'Failed to delete hotel: $error',
+        );
+      }
+    }
+  }
 }

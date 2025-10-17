@@ -58,4 +58,23 @@ class AdminHotelService {
       throw Exception('Failed to fetch rooms: $e');
     }
   }
+
+  /// Delete a hotel and its associated rooms
+  Future<void> deleteHotel(String hotelId) async {
+    try {
+      // First delete all rooms associated with this hotel
+      await _supabase
+          .from('rooms')
+          .delete()
+          .eq('hotel_id', hotelId);
+
+      // Then delete the hotel
+      await _supabase
+          .from('hotels')
+          .delete()
+          .eq('id', hotelId);
+    } catch (e) {
+      throw Exception('Failed to delete hotel: $e');
+    }
+  }
 }

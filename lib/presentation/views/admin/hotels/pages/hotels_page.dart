@@ -411,6 +411,28 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
                         ),
                       ),
                     ),
+
+                    // Action buttons
+                    Positioned(
+                      top: 50,
+                      right: 12,
+                      child: Row(
+                        children: [
+                          _buildActionButton(
+                            icon: CupertinoIcons.pencil,
+                            onTap: () => _showEditHotelModal(context, hotel),
+                            theme: theme,
+                          ),
+                          const SizedBox(width: 8),
+                          _buildActionButton(
+                            icon: CupertinoIcons.delete,
+                            onTap: () => _showDeleteConfirmation(context, hotel),
+                            theme: theme,
+                            isDestructive: true,
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -514,6 +536,72 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required VoidCallback onTap,
+    required ThemeData theme,
+    bool isDestructive = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: isDestructive 
+              ? Colors.red.withOpacity(0.9) 
+              : theme.colorScheme.surface.withOpacity(0.9),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: theme.colorScheme.shadow.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(
+          icon,
+          size: 16,
+          color: isDestructive 
+              ? Colors.white 
+              : theme.colorScheme.onSurface,
+        ),
+      ),
+    );
+  }
+
+  void _showEditHotelModal(BuildContext context, Hotel hotel) {
+    context.push(
+      '/admin/hotels/add',
+      extra: hotel,
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, Hotel hotel) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Hotel'),
+        content: Text('Are you sure you want to delete "${hotel.name}"? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Provider.of<AdminHotelsProvider>(context, listen: false)
+                  .deleteHotel(hotel.id, context);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }
