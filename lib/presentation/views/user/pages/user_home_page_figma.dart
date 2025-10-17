@@ -742,7 +742,6 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
         width: 240,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: theme.colorScheme.shadow.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
@@ -831,7 +830,6 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
         width: 280,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: theme.colorScheme.shadow.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
@@ -905,15 +903,15 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: theme.colorScheme.shadow.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
               child: Container(
-                height: 160,
+                height: 140,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceVariant,
                   image: hotel.coverImage != null && hotel.coverImage.isNotEmpty
@@ -926,20 +924,21 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     hotel.name ?? 'Unknown Hotel',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(CupertinoIcons.location_solid, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                      Icon(CupertinoIcons.location_solid, size: 12, color: theme.colorScheme.onSurfaceVariant),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
@@ -951,13 +950,13 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Row(
                     children: [
                       if (hotel.rating != null) ...[
-                        Icon(CupertinoIcons.star_fill, color: Colors.amber, size: 16),
+                        Icon(CupertinoIcons.star_fill, color: Colors.amber, size: 14),
                         const SizedBox(width: 4),
-                        Text(hotel.rating.toStringAsFixed(1), style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
+                        Text(hotel.rating.toStringAsFixed(1), style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold)),
                       ],
                       if (hotel.reviewsCount != null) ...[
                         const SizedBox(width: 4),
