@@ -31,9 +31,12 @@ class UserPackagesProvider extends ChangeNotifier {
   int get filteredPackagesCount => _packages.length;
 
   Future<void> loadPackages(BuildContext context) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    // Schedule the initial state change after the current frame
+    Future.microtask(() {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+    });
 
     try {
       // Load packages and filters in parallel
@@ -169,9 +172,12 @@ class UserPackagesProvider extends ChangeNotifier {
   }
 
   Future<void> loadPackageDetails(String packageId) async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
+    // Schedule the initial state change after the current frame
+    Future.microtask(() {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+    });
 
     try {
       _selectedPackage = await _service.getPackageById(packageId);

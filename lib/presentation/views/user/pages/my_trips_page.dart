@@ -74,7 +74,7 @@ class _MyTripsPageState extends State<MyTripsPage> with SingleTickerProviderStat
         elevation: 0,
         leading: IconButton(
           icon: Icon(CupertinoIcons.back, color: theme.colorScheme.onSurface),
-          onPressed: () => context.go('/user-home'),
+          onPressed: () => context.go('/home'),
         ),
         title: Text(
           'My Trips',

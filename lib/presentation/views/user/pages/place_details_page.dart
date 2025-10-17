@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:gotravel/presentation/providers/places_provider.dart';
 import 'package:gotravel/presentation/providers/user_favorites_provider.dart';
 import 'package:gotravel/data/models/user_favorite_model.dart';
+import 'package:gotravel/data/models/tour_package_model.dart';
+import 'package:gotravel/data/services/remote/user_packages_service.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 
 class PlaceDetailsPage extends StatefulWidget {
   final String placeId;
@@ -18,6 +21,10 @@ class PlaceDetailsPage extends StatefulWidget {
 }
 
 class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
+  final UserPackagesService _packagesService = UserPackagesService();
+  List<TourPackage> _placePackages = [];
+  bool _isLoadingPackages = false;
+  
   @override
   void initState() {
     super.initState();
@@ -25,6 +32,38 @@ class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
       Provider.of<PlacesProvider>(context, listen: false)
           .loadPlaceDetails(widget.placeId);
     });
+    _loadPlacePackages();
+  }
+
+  Future<void> _loadPlacePackages() async {
+    if (!mounted) return;
+    
+    setState(() {
+      _isLoadingPackages = true;
+    });
+
+    try {
+      final packages = await _packagesService.fetchPackagesByPlace(widget.placeId);
+      if (!mounted) return;
+      
+      setState(() {
+        _placePackages = packages;
+        _isLoadingPackages = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      
+      setState(() {
+        _isLoadingPackages = false;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading packages: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -174,79 +213,13 @@ class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title and Rating
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              place.name,
-                              style: theme.textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          if (place.rating > 0) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    CupertinoIcons.star_fill,
-                                    color: Colors.white,
-                                    size: 16,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    place.rating.toStringAsFixed(1),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      // Location
-                      Row(
-                        children: [
-                          Icon(
-                            CupertinoIcons.location_solid,
-                            size: 18,
-                            color: theme.colorScheme.primary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${place.city ?? ''}, ${place.country}',
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      if (place.reviewsCount > 0) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          '${place.reviewsCount} reviews',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
+                      // Title Only
+                      Text(
+                        place.name,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
+                      ),
 
                       const SizedBox(height: 24),
 
@@ -395,21 +368,27 @@ class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
                             itemBuilder: (context, index) {
                               return Padding(
                                 padding: const EdgeInsets.only(right: 8),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    place.images[index],
-                                    width: 160,
-                                    height: 120,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
+                                child: GestureDetector(
+                                  onTap: () => _showImageViewer(context, place.images, index),
+                                  child: Hero(
+                                    tag: 'place_image_$index',
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Image.network(
+                                        place.images[index],
                                         width: 160,
                                         height: 120,
-                                        color: theme.colorScheme.surfaceVariant,
-                                        child: const Icon(CupertinoIcons.photo),
-                                      );
-                                    },
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Container(
+                                            width: 160,
+                                            height: 120,
+                                            color: theme.colorScheme.surfaceVariant,
+                                            child: const Icon(CupertinoIcons.photo),
+                                          );
+                                        },
+                                      ),
+                                    ),
                                   ),
                                 ),
                               );
@@ -418,6 +397,56 @@ class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
                         ),
                         const SizedBox(height: 24),
                       ],
+
+                      // Available Packages Section
+                      Text(
+                        'Available Packages',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      
+                      if (_isLoadingPackages)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(24.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
+                      else if (_placePackages.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                Icon(
+                                  CupertinoIcons.cube_box,
+                                  size: 48,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'No packages available for this place yet',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        ...List.generate(
+                          _placePackages.length,
+                          (index) => _buildPackageCard(theme, _placePackages[index]),
+                        ),
+                      
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
@@ -425,6 +454,139 @@ class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildPackageCard(ThemeData theme, TourPackage package) {
+    return GestureDetector(
+      onTap: () {
+        context.push('/package-details/${package.id}');
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Package Image
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                bottomLeft: Radius.circular(12),
+              ),
+              child: Image.network(
+                package.coverImage,
+                width: 120,
+                height: 120,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 120,
+                    height: 120,
+                    color: theme.colorScheme.surfaceVariant,
+                    child: const Icon(CupertinoIcons.photo),
+                  );
+                },
+              ),
+            ),
+            
+            // Package Details
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Package name
+                    Text(
+                      package.name,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    
+                    // Duration
+                    Row(
+                      children: [
+                        Icon(
+                          CupertinoIcons.calendar,
+                          size: 14,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${package.durationDays} days',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Icon(
+                          CupertinoIcons.person_2,
+                          size: 14,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${package.maxParticipants} max',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    
+                    // Price
+                    Text(
+                      '${package.currency} ${package.price.toStringAsFixed(0)}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            // Arrow Icon
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Icon(
+                CupertinoIcons.chevron_forward,
+                color: theme.colorScheme.onSurfaceVariant,
+                size: 20,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showImageViewer(BuildContext context, List<String> images, int initialIndex) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => _ImageViewer(
+          images: images,
+          initialIndex: initialIndex,
+          heroTag: 'place_image_$initialIndex',
+        ),
       ),
     );
   }
@@ -479,6 +641,115 @@ class _PlaceDetailsPageState extends State<PlaceDetailsPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// Image Viewer Widget
+class _ImageViewer extends StatefulWidget {
+  final List<String> images;
+  final int initialIndex;
+  final String heroTag;
+
+  const _ImageViewer({
+    required this.images,
+    required this.initialIndex,
+    required this.heroTag,
+  });
+
+  @override
+  State<_ImageViewer> createState() => _ImageViewerState();
+}
+
+class _ImageViewerState extends State<_ImageViewer> {
+  late PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(CupertinoIcons.xmark, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          '${_currentIndex + 1} of ${widget.images.length}',
+          style: const TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+      ),
+      body: PageView.builder(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        itemCount: widget.images.length,
+        itemBuilder: (context, index) {
+          return InteractiveViewer(
+            minScale: 0.5,
+            maxScale: 3.0,
+            child: Center(
+              child: Hero(
+                tag: index == widget.initialIndex ? widget.heroTag : 'place_image_$index',
+                child: Image.network(
+                  widget.images[index],
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[800],
+                      child: const Icon(
+                        CupertinoIcons.photo,
+                        color: Colors.white,
+                        size: 64,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+      bottomNavigationBar: widget.images.length > 1
+          ? Container(
+              color: Colors.black,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  widget.images.length,
+                  (index) => Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _currentIndex == index ? Colors.white : Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
     );
   }
 }

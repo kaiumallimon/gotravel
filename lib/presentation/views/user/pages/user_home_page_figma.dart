@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:gotravel/presentation/providers/user_home_provider.dart';
 import 'package:gotravel/presentation/providers/places_provider.dart';
 import 'package:gotravel/presentation/providers/location_provider.dart';
+import 'package:gotravel/presentation/providers/user_favorites_provider.dart';
 import 'package:gotravel/data/models/place_model.dart';
+import 'package:gotravel/data/models/user_favorite_model.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
@@ -607,55 +609,58 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
                 bottom: 16,
                 left: 16,
                 right: 16,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        ...List.generate(5, (index) => Icon(
-                          CupertinoIcons.star_fill,
-                          color: Colors.yellow,
-                          size: 12,
-                        )),
-                        const SizedBox(width: 8),
-                        Text(
-                          place.rating.toStringAsFixed(1),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${place.country}, ${place.name}',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                child: Text(
+                  place.name,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               
-              // Bookmark icon
+              // Favorite icon
               Positioned(
                 top: 16,
                 right: 16,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    CupertinoIcons.bookmark,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+                child: Consumer<UserFavoritesProvider>(
+                  builder: (context, favProvider, child) {
+                    final isFavorite = favProvider.favorites.any(
+                      (fav) => fav.itemId == place.id && 
+                               fav.itemType == FavoriteItemType.place,
+                    );
+
+                    return GestureDetector(
+                      onTap: () async {
+                        if (isFavorite) {
+                          await favProvider.removeFromFavorites(
+                            itemType: FavoriteItemType.place,
+                            itemId: place.id,
+                          );
+                        } else {
+                          await favProvider.addToFavorites(
+                            itemType: FavoriteItemType.place,
+                            itemId: place.id,
+                          );
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          isFavorite
+                              ? CupertinoIcons.heart_fill
+                              : CupertinoIcons.heart,
+                          color: isFavorite ? Colors.red : Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -712,48 +717,59 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
                 ),
               ),
               
-              // Content
+              // Content - Place Name and Favorite Button
               Positioned(
                 bottom: 12,
                 left: 12,
                 right: 12,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        ...List.generate(5, (index) => Icon(
-                          CupertinoIcons.star_fill,
-                          color: Colors.yellow,
-                          size: 10,
-                        )),
-                        const SizedBox(width: 4),
-                        Text(
-                          place.rating.toStringAsFixed(1),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: Colors.white,
-                            fontSize: 10,
-                          ),
+                    Expanded(
+                      child: Text(
+                        place.name,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      place.country,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                    Text(
-                      place.name,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    const SizedBox(width: 8),
+                    Consumer<UserFavoritesProvider>(
+                      builder: (context, favoritesProvider, _) {
+                        final isFavorite = favoritesProvider.favorites
+                            .any((fav) => fav.itemId == place.id && fav.itemType == FavoriteItemType.place);
+                        
+                        return GestureDetector(
+                          onTap: () {
+                            if (isFavorite) {
+                              favoritesProvider.removeFromFavorites(
+                                itemId: place.id,
+                                itemType: FavoriteItemType.place,
+                              );
+                            } else {
+                              favoritesProvider.addToFavorites(
+                                itemId: place.id,
+                                itemType: FavoriteItemType.place,
+                              );
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.3),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isFavorite ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
+                              color: isFavorite ? Colors.red : Colors.white,
+                              size: 18,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),

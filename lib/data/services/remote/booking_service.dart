@@ -135,6 +135,10 @@ class BookingService {
         paymentID: paymentID,
       );
 
+      print('Execute response statusCode: ${executeResponse.statusCode}');
+      print('Execute response statusMessage: ${executeResponse.statusMessage}');
+      print('Execute response trxID: ${executeResponse.trxID}');
+
       if (executeResponse.statusCode != '0000') {
         // Payment failed - update booking and payment records
         await _supabase
@@ -176,6 +180,9 @@ class BookingService {
               'paymentID': executeResponse.paymentID,
               'statusCode': executeResponse.statusCode,
               'statusMessage': executeResponse.statusMessage,
+              'transactionStatus': executeResponse.transactionStatus,
+              'amount': executeResponse.amount,
+              'currency': executeResponse.currency,
             },
           })
           .eq('payment_reference', paymentID);

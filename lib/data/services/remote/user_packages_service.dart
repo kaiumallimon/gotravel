@@ -188,4 +188,25 @@ class UserPackagesService {
       throw Exception('Failed to fetch package details: $e');
     }
   }
+
+  /// Fetch packages by place_id
+  Future<List<TourPackage>> fetchPackagesByPlace(String placeId) async {
+    try {
+      final response = await _supabase
+          .from('packages')
+          .select('''
+            *, 
+            package_activities(*),
+            package_dates(*)
+          ''')
+          .eq('place_id', placeId)
+          .eq('is_active', true)
+          .order('created_at', ascending: false);
+
+      final List data = response;
+      return data.map((package) => TourPackage.fromMap(package)).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch packages by place: $e');
+    }
+  }
 }

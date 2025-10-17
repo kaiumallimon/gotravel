@@ -121,19 +121,21 @@ class BkashRepository {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+      print('bKash execute response data: $data');
+      
       return ExecutePaymentResponse(
-        paymentID: data['paymentID'],
-        customerMsisdn: data['customerMsisdn'],
-        payerReference: data['payerReference'],
-        paymentExecuteTime: data['paymentExecuteTime'],
-        trxID: data['trxID'],
-        transactionStatus: data['transactionStatus'],
-        amount: data['amount'],
-        currency: data['currency'],
-        intent: data['intent'],
-        merchantInvoiceNumber: data['merchantInvoiceNumber'],
-        statusCode: data['statusCode'],
-        statusMessage: data['statusMessage'],
+        paymentID: data['paymentID']?.toString() ?? '',
+        customerMsisdn: data['customerMsisdn']?.toString() ?? '',
+        payerReference: data['payerReference']?.toString() ?? '',
+        paymentExecuteTime: data['paymentExecuteTime']?.toString() ?? '',
+        trxID: data['trxID']?.toString() ?? '',
+        transactionStatus: data['transactionStatus']?.toString() ?? '',
+        amount: data['amount']?.toString() ?? '',
+        currency: data['currency']?.toString() ?? '',
+        intent: data['intent']?.toString() ?? '',
+        merchantInvoiceNumber: data['merchantInvoiceNumber']?.toString() ?? '',
+        statusCode: data['statusCode']?.toString() ?? '0000',
+        statusMessage: data['statusMessage']?.toString() ?? '',
       );
     } else {
       return ExecutePaymentResponse(
