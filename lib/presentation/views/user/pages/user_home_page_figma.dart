@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:gotravel/presentation/providers/user_home_provider.dart';
 import 'package:gotravel/presentation/providers/places_provider.dart';
+import 'package:gotravel/presentation/providers/location_provider.dart';
 import 'package:gotravel/data/models/place_model.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -15,7 +16,6 @@ class UserHomePageFigma extends StatefulWidget {
 
 class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProviderStateMixin {
   late TabController _tabController;
-  String _selectedLocation = 'New York, USA';
 
   @override
   void initState() {
@@ -24,6 +24,8 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<UserHomeProvider>(context, listen: false).loadHomeData(context);
       Provider.of<PlacesProvider>(context, listen: false).loadPlaces();
+      // Get user's current location
+      Provider.of<LocationProvider>(context, listen: false).getCurrentLocation();
     });
   }
 
@@ -54,57 +56,89 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
                 flexibleSpace: FlexibleSpaceBar(
                   background: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    child: Row(
-                      children: [
-                        // Location
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Icon(
-                                CupertinoIcons.location_solid,
-                                color: theme.colorScheme.onSurface,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  _selectedLocation,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
+                    child: Consumer<LocationProvider>(
+                      builder: (context, locationProvider, child) {
+                        return Row(
+                          children: [
+                            // Location
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    CupertinoIcons.location_solid,
+                                    color: theme.colorScheme.primary,
+                                    size: 20,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: locationProvider.isLoading
+                                        ? Row(
+                                            children: [
+                                              SizedBox(
+                                                width: 12,
+                                                height: 12,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                                    theme.colorScheme.primary,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                'Getting location...',
+                                                style: theme.textTheme.bodyMedium?.copyWith(
+                                                  color: theme.colorScheme.onSurfaceVariant,
+                                                ),
+                                              ),
+                                            ],
+                                          )
+                                        : GestureDetector(
+                                            onTap: () {
+                                              // Refresh location
+                                              locationProvider.getCurrentLocation();
+                                            },
+                                            child: Text(
+                                              locationProvider.currentAddress,
+                                              style: theme.textTheme.titleSmall?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            
+                            // Profile Avatar
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: [
+                                    theme.colorScheme.primary,
+                                    theme.colorScheme.primary.withOpacity(0.8),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        
-                        // Profile Avatar
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [
-                                theme.colorScheme.primary,
-                                theme.colorScheme.primary.withOpacity(0.8),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'JD',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                              child: Center(
+                                child: Text(
+                                  'JD',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ),
-                      ],
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -125,11 +159,12 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
                     unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
                     indicatorColor: theme.colorScheme.primary,
                     indicatorWeight: 3,
-                    labelStyle: const TextStyle(
+                    dividerColor: theme.primaryColor.withAlpha(20),
+                    labelStyle: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
-                    unselectedLabelStyle: const TextStyle(
+                    unselectedLabelStyle: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.normal,
                       fontSize: 14,
                     ),
@@ -159,12 +194,12 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Recommended Packages Section
+              // Package counter (all) + See all
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Recommended Packages',
+                    '${provider.totalPackages} Packages',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -183,12 +218,39 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 16),
-              
+
+              // Latest Packages (latest 5)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Latest Packages',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      context.push('/packages');
+                    },
+                    child: Text(
+                      'See all',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
               if (provider.isLoading)
                 const Center(child: CircularProgressIndicator())
-              else if (provider.packages.isEmpty)
+              else if (provider.latestPackages.isEmpty)
                 Center(
                   child: Text(
                     'No packages available',
@@ -202,12 +264,128 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
                   height: 280,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    itemCount: provider.packages.length,
+                    itemCount: provider.latestPackages.length,
                     itemBuilder: (context, index) {
-                      final package = provider.packages[index];
+                      final package = provider.latestPackages[index];
                       return Padding(
                         padding: EdgeInsets.only(
-                          right: index < provider.packages.length - 1 ? 16 : 0,
+                          right: index < provider.latestPackages.length - 1 ? 16 : 0,
+                        ),
+                        child: _buildPackageCard(package),
+                      );
+                    },
+                  ),
+                ),
+
+              const SizedBox(height: 24),
+
+              // Featured (Recommended) Section
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Featured',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      context.push('/packages');
+                    },
+                    child: Text(
+                      'See all',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              if (provider.isLoading)
+                const Center(child: CircularProgressIndicator())
+              else if (provider.recommendedPackages.isEmpty)
+                Center(
+                  child: Text(
+                    'No recommended packages available',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 200,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: provider.recommendedPackages.length,
+                    itemBuilder: (context, index) {
+                      final package = provider.recommendedPackages[index];
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          right: index < provider.recommendedPackages.length - 1 ? 16 : 0,
+                        ),
+                        child: _buildPackageCard(package),
+                      );
+                    },
+                  ),
+                ),
+
+              const SizedBox(height: 24),
+
+              // Top Packages Section
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Top Packages',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      context.push('/packages');
+                    },
+                    child: Text(
+                      'See all',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 12),
+
+              if (provider.isLoading)
+                const Center(child: CircularProgressIndicator())
+              else if (provider.topPackages.isEmpty)
+                Center(
+                  child: Text(
+                    'No top packages available',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 120,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: provider.topPackages.length,
+                    itemBuilder: (context, index) {
+                      final package = provider.topPackages[index];
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          right: index < provider.topPackages.length - 1 ? 12 : 0,
                         ),
                         child: _buildPackageCard(package),
                       );
@@ -707,36 +885,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
                 ),
               ),
               
-              // Rating badge
-              Positioned(
-                top: 16,
-                right: 16,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        CupertinoIcons.star_fill,
-                        color: Colors.yellow,
-                        size: 12,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        package.rating.toStringAsFixed(1),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              // (rating badge removed per design)
             ],
           ),
         ),
