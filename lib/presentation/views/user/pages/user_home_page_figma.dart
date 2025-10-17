@@ -20,7 +20,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<UserHomeProvider>(context, listen: false).loadHomeData(context);
       Provider.of<PlacesProvider>(context, listen: false).loadPlaces();
@@ -118,7 +118,6 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
                     controller: _tabController,
                     tabs: const [
                       Tab(text: 'Packages'),
-                      Tab(text: 'Flights'),
                       Tab(text: 'Places'),
                       Tab(text: 'Hotels'),
                     ],
@@ -143,7 +142,6 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
             controller: _tabController,
             children: [
               _buildPackagesTab(),
-              _buildFlightsTab(),
               _buildPlacesTab(),
               _buildHotelsTab(),
             ],
@@ -220,41 +218,6 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
           ),
         );
       },
-    );
-  }
-
-  Widget _buildFlightsTab() {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              CupertinoIcons.airplane,
-              size: 80,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Flights Coming Soon',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Flight booking feature will be available soon',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
     );
   }
 
