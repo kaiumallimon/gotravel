@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gotravel/data/models/booking_model.dart';
 import 'package:gotravel/data/services/remote/booking_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class BookingProvider with ChangeNotifier {
   final BookingService _bookingService = BookingService();
@@ -12,6 +13,11 @@ class BookingProvider with ChangeNotifier {
   List<BookingModel> _userBookings = [];
   BookingModel? _currentBooking;
   BookingModel? _selectedBooking;
+  
+  // Payment state
+  String? _pendingPaymentId;
+  String? _pendingIdToken;
+  String? _pendingBookingId;
 
   // Form data for creating bookings
   BookingType _bookingType = BookingType.package;
@@ -477,6 +483,274 @@ class BookingProvider with ChangeNotifier {
   // Clear error
   void clearError() {
     _setError(null);
+  }
+  
+  // New methods for booking system with bKash
+  
+  /// Load all bookings for current user
+  Future<void> loadBookings() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      _setError('User not authenticated');
+      return;
+    }
+
+    _setLoading(true);
+    _setError(null);
+
+    try {
+      _userBookings = await _bookingService.getUserBookings(user.id);
+      notifyListeners();
+    } catch (e) {
+      _setError(e.toString());
+    } finally {
+      _setLoading(false);
+    }
+  }
+  
+  /// Get upcoming package bookings
+  List<BookingModel> get upcomingPackageBookings {
+    final now = DateTime.now();
+    return _userBookings
+        .where((b) => 
+            b.bookingType == BookingType.package &&
+            b.departureDate != null &&
+            b.departureDate!.isAfter(now) &&
+            b.bookingStatus != BookingStatus.cancelled)
+        .toList()
+      ..sort((a, b) => a.departureDate!.compareTo(b.departureDate!));
+  }
+  
+  /// Get upcoming hotel bookings
+  List<BookingModel> get upcomingHotelBookings {
+    final now = DateTime.now();
+    return _userBookings
+        .where((b) => 
+            b.bookingType == BookingType.hotel &&
+            b.checkInDate != null &&
+            b.checkInDate!.isAfter(now) &&
+            b.bookingStatus != BookingStatus.cancelled)
+        .toList()
+      ..sort((a, b) => a.checkInDate!.compareTo(b.checkInDate!));
+  }
+  
+  /// Get past bookings
+  List<BookingModel> get pastBookings {
+    final now = DateTime.now();
+    return _userBookings.where((b) {
+      if (b.bookingType == BookingType.package && b.departureDate != null) {
+        return b.departureDate!.isBefore(now);
+      } else if (b.bookingType == BookingType.hotel && b.checkOutDate != null) {
+        return b.checkOutDate!.isBefore(now);
+      }
+      return false;
+    }).toList()
+      ..sort((a, b) {
+        final dateA = a.bookingType == BookingType.package ? a.departureDate : a.checkOutDate;
+        final dateB = b.bookingType == BookingType.package ? b.departureDate : b.checkOutDate;
+        return dateB!.compareTo(dateA!);
+      });
+  }
+  
+  /// Create package booking with bKash payment
+  Future<Map<String, dynamic>?> createPackageBooking({
+    required String packageId,
+    required String packageDateId,
+    required String primaryGuestName,
+    required String primaryGuestEmail,
+    required String primaryGuestPhone,
+    required int totalParticipants,
+    required DateTime departureDate,
+    DateTime? returnDate,
+    required double basePrice,
+    required String currency,
+    List<GuestDetail>? guestDetails,
+    String? specialRequests,
+    String? dietaryRequirements,
+    String? accessibilityNeeds,
+  }) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      _setError('User not authenticated');
+      return null;
+    }
+
+    _setLoading(true);
+    _setError(null);
+
+    try {
+      final result = await _bookingService.createBookingWithPayment(
+        bookingType: 'package',
+        itemId: packageId,
+        primaryGuestName: primaryGuestName,
+        primaryGuestEmail: primaryGuestEmail,
+        primaryGuestPhone: primaryGuestPhone,
+        totalParticipants: totalParticipants,
+        totalAmountUSD: basePrice,
+        additionalData: {
+          'departure_date': departureDate.toIso8601String(),
+          if (returnDate != null) 'return_date': returnDate.toIso8601String(),
+          'package_date_id': packageDateId,
+          if (guestDetails != null) 'guest_details': guestDetails.map((g) => g.toMap()).toList(),
+          if (specialRequests != null) 'special_requests': specialRequests,
+          if (dietaryRequirements != null) 'dietary_requirements': dietaryRequirements,
+          if (accessibilityNeeds != null) 'accessibility_needs': accessibilityNeeds,
+        },
+      );
+      
+      // Store payment info for later execution
+      _pendingPaymentId = result['paymentID'];
+      _pendingIdToken = result['idToken'];
+      _pendingBookingId = result['booking'].id;
+      
+      _currentBooking = result['booking'];
+      notifyListeners();
+      
+      // Launch bKash URL
+      final bkashURL = result['bkashURL'];
+      final uri = Uri.parse(bkashURL);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        _setError('Could not launch payment page');
+        return null;
+      }
+      
+      _setLoading(false);
+      return result;
+    } catch (e) {
+      _setError(e.toString());
+      _setLoading(false);
+      return null;
+    }
+  }
+  
+  /// Create hotel booking with bKash payment
+  Future<Map<String, dynamic>?> createHotelBooking({
+    required String hotelId,
+    required String roomId,
+    required String primaryGuestName,
+    required String primaryGuestEmail,
+    required String primaryGuestPhone,
+    required int totalParticipants,
+    required DateTime checkInDate,
+    required DateTime checkOutDate,
+    required int roomCount,
+    required double basePrice,
+    required String currency,
+    List<GuestDetail>? guestDetails,
+    String? specialRequests,
+    String? accessibilityNeeds,
+  }) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      _setError('User not authenticated');
+      return null;
+    }
+
+    _setLoading(true);
+    _setError(null);
+
+    try {
+      final result = await _bookingService.createBookingWithPayment(
+        bookingType: 'hotel',
+        itemId: hotelId,
+        primaryGuestName: primaryGuestName,
+        primaryGuestEmail: primaryGuestEmail,
+        primaryGuestPhone: primaryGuestPhone,
+        totalParticipants: totalParticipants,
+        totalAmountUSD: basePrice,
+        additionalData: {
+          'check_in_date': checkInDate.toIso8601String(),
+          'check_out_date': checkOutDate.toIso8601String(),
+          'room_id': roomId,
+          'room_count': roomCount,
+          if (guestDetails != null) 'guest_details': guestDetails.map((g) => g.toMap()).toList(),
+          if (specialRequests != null) 'special_requests': specialRequests,
+          if (accessibilityNeeds != null) 'accessibility_needs': accessibilityNeeds,
+        },
+      );
+      
+      // Store payment info for later execution
+      _pendingPaymentId = result['paymentID'];
+      _pendingIdToken = result['idToken'];
+      _pendingBookingId = result['booking'].id;
+      
+      _currentBooking = result['booking'];
+      notifyListeners();
+      
+      // Launch bKash URL
+      final bkashURL = result['bkashURL'];
+      final uri = Uri.parse(bkashURL);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        _setError('Could not launch payment page');
+        return null;
+      }
+      
+      _setLoading(false);
+      return result;
+    } catch (e) {
+      _setError(e.toString());
+      _setLoading(false);
+      return null;
+    }
+  }
+  
+  /// Execute payment after user completes bKash checkout
+  Future<bool> executePayment({
+    String? paymentId,
+    String? idToken,
+    String? bookingId,
+  }) async {
+    _setLoading(true);
+    _setError(null);
+
+    try {
+      // Use provided values or fall back to stored values
+      final pId = paymentId ?? _pendingPaymentId;
+      final token = idToken ?? _pendingIdToken;
+      final bId = bookingId ?? _pendingBookingId;
+      
+      if (pId == null || token == null || bId == null) {
+        _setError('Missing payment information');
+        return false;
+      }
+      
+      final result = await _bookingService.executeBookingPayment(
+        paymentID: pId,
+        idToken: token,
+        bookingId: bId,
+      );
+      
+      if (result['success'] != true) {
+        _setError('Payment execution failed');
+        return false;
+      }
+      
+      // Clear pending payment info
+      _pendingPaymentId = null;
+      _pendingIdToken = null;
+      _pendingBookingId = null;
+      
+      // Reload bookings to refresh list with updated booking
+      await loadBookings();
+      
+      // Update current booking from the refreshed list
+      _currentBooking = _userBookings.firstWhere(
+        (b) => b.id == bId,
+        orElse: () => _currentBooking!,
+      );
+      
+      notifyListeners();
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      _setLoading(false);
+      return false;
+    }
   }
 
   @override

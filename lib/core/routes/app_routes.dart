@@ -28,4 +28,5 @@ class AppRoutes {
   static const String payment = '/payment';
   static const String paymentSuccess = '/payment-success';
   static const String favorites = '/favorites';
+  static const String myTrips = '/my-trips';
 }

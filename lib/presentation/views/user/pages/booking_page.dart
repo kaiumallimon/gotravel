@@ -453,25 +453,48 @@ class _BookingPageState extends State<BookingPage> {
     final packageProvider = Provider.of<UserPackagesProvider>(context, listen: false);
     final package = packageProvider.selectedPackage!;
     
-    final bookingData = {
-      'packageId': widget.packageId,
-      'packageName': package.name,
-      'travelDate': selectedDate!.toIso8601String(),
-      'numberOfPeople': numberOfPeople,
-      'customerName': nameController.text,
-      'customerEmail': emailController.text,
-      'customerPhone': phoneController.text,
-      'specialRequests': notesController.text,
-      'totalAmount': package.price * numberOfPeople,
-      'currency': package.currency,
-    };
-    
     try {
-      await bookingProvider.createBookingWithData(bookingData);
+      // Use the new createPackageBooking with bKash integration
+      final result = await bookingProvider.createPackageBooking(
+        packageId: widget.packageId,
+        packageDateId: widget.packageId, // Using package ID as date ID for now (adjust based on your date selection logic)
+        primaryGuestName: nameController.text,
+        primaryGuestEmail: emailController.text,
+        primaryGuestPhone: phoneController.text,
+        totalParticipants: numberOfPeople,
+        departureDate: selectedDate!,
+        basePrice: package.price * numberOfPeople,
+        currency: package.currency,
+        specialRequests: notesController.text.isNotEmpty ? notesController.text : null,
+      );
+      
+      if (result == null) {
+        // Error already set in provider
+        if (context.mounted && bookingProvider.error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Booking failed: ${bookingProvider.error}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
       
       if (context.mounted) {
-        // Navigate to payment page (simplified - no real payment gateway)
-        context.push('/payment-success');
+        // Show success message that payment window opened
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Booking created! Complete payment in bKash to confirm.'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        
+        // Navigate back or to My Trips page
+        // User will need to manually execute payment after returning from bKash
+        // You can implement deep linking to handle automatic payment confirmation
+        context.go('/my-trips');
       }
     } catch (e) {
       if (context.mounted) {

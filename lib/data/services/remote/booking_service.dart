@@ -1,8 +1,191 @@
 import 'package:gotravel/data/models/booking_model.dart';
+import 'package:gotravel/data/services/payment_gateway/bkash_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:math';
 
 class BookingService {
   final SupabaseClient _supabase = Supabase.instance.client;
+  final BkashRepository _bkashRepo = BkashRepository();
+
+  /// Generate a unique booking reference
+  String generateBookingReference() {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final random = Random().nextInt(9999);
+    return 'GT${timestamp.toString().substring(timestamp.toString().length - 8)}${random.toString().padLeft(4, '0')}';
+  }
+
+  /// Create booking with bKash payment (FOR TESTING: Use BDT 1)
+  Future<Map<String, dynamic>> createBookingWithPayment({
+    required String bookingType, // 'package' or 'hotel'
+    required String itemId,
+    required String primaryGuestName,
+    required String primaryGuestEmail,
+    required String primaryGuestPhone,
+    required int totalParticipants,
+    required double totalAmountUSD,
+    Map<String, dynamic>? additionalData,
+  }) async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final bookingReference = generateBookingReference();
+
+      // FOR TESTING: Use BDT 1 instead of converting USD to BDT
+      const double testAmountBDT = 1.0;
+
+      // Step 1: Grant bKash token
+      print('Granting bKash token...');
+      final tokenResponse = await _bkashRepo.grantToken();
+      
+      if (tokenResponse.statusCode != '0000') {
+        throw Exception('Failed to get bKash token: ${tokenResponse.statusMessage}');
+      }
+
+      // Step 2: Create bKash payment
+      print('Creating bKash payment for BDT $testAmountBDT');
+      final paymentResponse = await _bkashRepo.createPayment(
+        idToken: tokenResponse.idToken,
+        amount: testAmountBDT.toString(),
+        invoiceNumber: bookingReference,
+      );
+
+      if (paymentResponse.statusCode != '0000') {
+        throw Exception('bKash payment creation failed: ${paymentResponse.statusMessage}');
+      }
+
+      // Step 3: Create booking record
+      final bookingData = {
+        'user_id': user.id,
+        'booking_type': bookingType,
+        'item_id': itemId,
+        'booking_reference': bookingReference,
+        'primary_guest_name': primaryGuestName,
+        'primary_guest_email': primaryGuestEmail,
+        'primary_guest_phone': primaryGuestPhone,
+        'total_participants': totalParticipants,
+        'total_amount': totalAmountUSD,
+        'currency': 'USD',
+        'booking_status': 'pending',
+        'payment_status': 'pending',
+        'payment_method': 'bkash',
+        ...?additionalData,
+      };
+
+      final bookingResponse = await _supabase
+          .from('bookings')
+          .insert(bookingData)
+          .select()
+          .single();
+
+      final bookingId = bookingResponse['id'];
+
+      // Step 4: Create payment record
+      final paymentData = {
+        'booking_id': bookingId,
+        'user_id': user.id,
+        'payment_reference': paymentResponse.paymentID,
+        'amount': testAmountBDT,
+        'currency': 'BDT',
+        'payment_method': 'bkash',
+        'payment_provider': 'bkash',
+        'provider_transaction_id': paymentResponse.paymentID,
+        'payment_status': 'pending',
+        'payment_gateway_response': {
+          'paymentID': paymentResponse.paymentID,
+          'bkashURL': paymentResponse.bkashURL,
+          'transactionStatus': paymentResponse.transactionStatus,
+          'merchantInvoiceNumber': paymentResponse.merchantInvoiceNumber,
+        },
+      };
+
+      await _supabase.from('payments').insert(paymentData);
+
+      return {
+        'success': true,
+        'booking': BookingModel.fromMap(bookingResponse),
+        'paymentID': paymentResponse.paymentID,
+        'bkashURL': paymentResponse.bkashURL,
+        'bookingReference': bookingReference,
+        'idToken': tokenResponse.idToken,
+      };
+    } catch (e) {
+      print('Error creating booking with payment: $e');
+      throw Exception('Failed to create booking: $e');
+    }
+  }
+
+  /// Execute payment after user completes bKash checkout
+  Future<Map<String, dynamic>> executeBookingPayment({
+    required String bookingId,
+    required String paymentID,
+    required String idToken,
+  }) async {
+    try {
+      // Execute bKash payment
+      print('Executing bKash payment: $paymentID');
+      final executeResponse = await _bkashRepo.executePaymentresponse(
+        idToken: idToken,
+        paymentID: paymentID,
+      );
+
+      if (executeResponse.statusCode != '0000') {
+        // Payment failed - update booking and payment records
+        await _supabase
+            .from('bookings')
+            .update({
+              'payment_status': 'failed',
+              'booking_status': 'cancelled',
+            })
+            .eq('id', bookingId);
+
+        await _supabase
+            .from('payments')
+            .update({
+              'payment_status': 'failed',
+              'failure_reason': executeResponse.statusMessage,
+            })
+            .eq('payment_reference', paymentID);
+
+        throw Exception('Payment execution failed: ${executeResponse.statusMessage}');
+      }
+
+      // Payment successful - update booking and payment records
+      await _supabase
+          .from('bookings')
+          .update({
+            'payment_status': 'paid',
+            'booking_status': 'confirmed',
+          })
+          .eq('id', bookingId);
+
+      await _supabase
+          .from('payments')
+          .update({
+            'payment_status': 'completed',
+            'provider_transaction_id': executeResponse.trxID,
+            'processed_at': DateTime.now().toIso8601String(),
+            'payment_gateway_response': {
+              'trxID': executeResponse.trxID,
+              'paymentID': executeResponse.paymentID,
+              'statusCode': executeResponse.statusCode,
+              'statusMessage': executeResponse.statusMessage,
+            },
+          })
+          .eq('payment_reference', paymentID);
+
+      return {
+        'success': true,
+        'trxID': executeResponse.trxID,
+        'message': 'Booking confirmed successfully!',
+      };
+    } catch (e) {
+      print('Error executing payment: $e');
+      throw Exception('Failed to execute payment: $e');
+    }
+  }
 
   /// Create a new booking
   Future<BookingModel> createBooking(BookingModel booking) async {
@@ -204,13 +387,6 @@ class BookingService {
     } catch (e) {
       throw Exception('Failed to fetch bookings by item: $e');
     }
-  }
-
-  /// Generate unique booking reference
-  Future<String> generateBookingReference() async {
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final random = (timestamp % 10000).toString().padLeft(4, '0');
-    return 'BK$timestamp$random';
   }
 
   /// Check booking availability for package dates
