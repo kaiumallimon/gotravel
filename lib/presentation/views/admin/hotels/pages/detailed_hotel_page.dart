@@ -32,6 +32,37 @@ class _DetailedHotelPageState extends State<DetailedHotelPage>
     );
   }
 
+  void _editHotel(BuildContext context) {
+    Navigator.of(context).pushNamed(
+      '/admin/hotels/add',
+      arguments: widget.hotel,
+    );
+  }
+
+  void _deleteHotel(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Hotel'),
+        content: Text('Are you sure you want to delete "${widget.hotel.name}"? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close dialog
+              Navigator.of(context).pop(true); // Return to hotels list with delete signal
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -49,6 +80,18 @@ class _DetailedHotelPageState extends State<DetailedHotelPage>
                   fontSize: 20,
                 )),
                 centerTitle: false,
+            actions: [
+              IconButton(
+                onPressed: () => _editHotel(context),
+                icon: Icon(Icons.edit),
+                tooltip: 'Edit Hotel',
+              ),
+              IconButton(
+                onPressed: () => _deleteHotel(context),
+                icon: Icon(Icons.delete),
+                tooltip: 'Delete Hotel',
+              ),
+            ],
 
             flexibleSpace: FlexibleSpaceBar(
               title: Text(

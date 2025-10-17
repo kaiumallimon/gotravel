@@ -7,6 +7,49 @@ class DetailedPlacePage extends StatelessWidget {
   
   const DetailedPlacePage({super.key, required this.place});
 
+  void _showImageViewer(BuildContext context, int initialIndex) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => _ImageViewer(
+          images: place.images,
+          initialIndex: initialIndex,
+          heroTag: 'place_image_$initialIndex',
+        ),
+      ),
+    );
+  }
+
+  void _editPlace(BuildContext context) {
+    Navigator.of(context).pushNamed(
+      '/admin/places/add',
+      arguments: place,
+    );
+  }
+
+  void _deletePlace(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Place'),
+        content: Text('Are you sure you want to delete "${place.name}"? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close dialog
+              Navigator.of(context).pop(true); // Return to places list with delete signal
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -18,6 +61,18 @@ class DetailedPlacePage extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(),
           icon: Icon(CupertinoIcons.xmark),
         ),
+        actions: [
+          IconButton(
+            onPressed: () => _editPlace(context),
+            icon: Icon(CupertinoIcons.pencil),
+            tooltip: 'Edit Place',
+          ),
+          IconButton(
+            onPressed: () => _deletePlace(context),
+            icon: Icon(CupertinoIcons.delete),
+            tooltip: 'Delete Place',
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -263,24 +318,30 @@ class DetailedPlacePage extends StatelessWidget {
                   itemBuilder: (context, index) {
                     return Padding(
                       padding: const EdgeInsets.only(right: 12),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          place.images[index],
-                          width: 120,
-                          height: 120,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
+                      child: GestureDetector(
+                        onTap: () => _showImageViewer(context, index),
+                        child: Hero(
+                          tag: 'place_image_$index',
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              place.images[index],
                               width: 120,
                               height: 120,
-                              color: Colors.grey[300],
-                              child: Icon(
-                                CupertinoIcons.photo,
-                                color: Colors.grey[600],
-                              ),
-                            );
-                          },
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 120,
+                                  height: 120,
+                                  color: Colors.grey[300],
+                                  child: Icon(
+                                    CupertinoIcons.photo,
+                                    color: Colors.grey[600],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
                         ),
                       ),
                     );
@@ -409,5 +470,113 @@ class DetailedPlacePage extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+}
+
+class _ImageViewer extends StatefulWidget {
+  final List<String> images;
+  final int initialIndex;
+  final String heroTag;
+
+  const _ImageViewer({
+    required this.images,
+    required this.initialIndex,
+    required this.heroTag,
+  });
+
+  @override
+  State<_ImageViewer> createState() => _ImageViewerState();
+}
+
+class _ImageViewerState extends State<_ImageViewer> {
+  late PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          '${_currentIndex + 1} of ${widget.images.length}',
+          style: const TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+      ),
+      body: PageView.builder(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        itemCount: widget.images.length,
+        itemBuilder: (context, index) {
+          return InteractiveViewer(
+            minScale: 0.5,
+            maxScale: 3.0,
+            child: Center(
+              child: Hero(
+                tag: index == widget.initialIndex ? widget.heroTag : 'place_image_$index',
+                child: Image.network(
+                  widget.images[index],
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[800],
+                      child: const Icon(
+                        Icons.broken_image,
+                        color: Colors.white,
+                        size: 64,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+      bottomNavigationBar: widget.images.length > 1
+          ? Container(
+              color: Colors.black,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  widget.images.length,
+                  (index) => Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _currentIndex == index ? Colors.white : Colors.grey,
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
+    );
   }
 }
