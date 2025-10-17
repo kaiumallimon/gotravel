@@ -155,7 +155,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   child: Center(
                     child: Text(
                       initials,
-                      style: theme.textTheme.titleLarge?.copyWith(
+                      style: theme.textTheme.titleSmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
@@ -182,7 +182,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
               children: [
                 Text(
                   'Featured Packages',
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -263,7 +263,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
               children: [
                 Text(
                   'Popular Places',
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -347,8 +347,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   children: [
                     Text(
                       '$total Packages',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      style: theme.textTheme.titleSmall?.copyWith(
                       ),
                     ),
                     TextButton.icon(
@@ -427,8 +426,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   children: [
                     Text(
                       '$total Hotels',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      style: theme.textTheme.titleSmall?.copyWith(
                       ),
                     ),
                     TextButton.icon(
@@ -504,7 +502,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
               children: [
                 Text(
                   'Recently Added Places',
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -585,7 +583,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
               children: [
                 Text(
                   'Recently Added Packages',
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -666,7 +664,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
               children: [
                 Text(
                   'Recently Added Hotels',
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -802,7 +800,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         if (package.price != null)
-                          Text('\$${package.price}', style: theme.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                          Text('\$${package.price}', style: theme.textTheme.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
                         if (package.rating != null)
                           Row(
                             children: [
