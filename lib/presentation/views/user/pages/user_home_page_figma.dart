@@ -1,15 +1,13 @@
-import 'package:flutter/cupertino.dart';
+﻿import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:gotravel/presentation/providers/user_home_provider.dart';
-import 'package:gotravel/presentation/providers/places_provider.dart';
-import 'package:gotravel/presentation/providers/location_provider.dart';
-import 'package:gotravel/presentation/providers/user_favorites_provider.dart';
-import 'package:gotravel/presentation/providers/user_hotels_provider.dart';
-import 'package:gotravel/data/models/place_model.dart';
-import 'package:gotravel/data/models/user_favorite_model.dart';
-import 'package:gotravel/data/models/hotel_model.dart';
-import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+
+import '../../../providers/location_provider.dart';
+import '../../../providers/places_provider.dart';
+import '../../../providers/user_home_provider.dart';
+import '../../../providers/user_hotels_provider.dart';
+import '../../../providers/user_profile_provider.dart';
 
 class UserHomePageFigma extends StatefulWidget {
   const UserHomePageFigma({super.key});
@@ -18,26 +16,28 @@ class UserHomePageFigma extends StatefulWidget {
   State<UserHomePageFigma> createState() => _UserHomePageFigmaState();
 }
 
-class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProviderStateMixin {
-  late TabController _tabController;
-
+class _UserHomePageFigmaState extends State<UserHomePageFigma> {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<UserHomeProvider>(context, listen: false).loadHomeData(context);
-      Provider.of<PlacesProvider>(context, listen: false).initialize();
-      Provider.of<UserHotelsProvider>(context, listen: false).initialize();
-      // Get user's current location
-      Provider.of<LocationProvider>(context, listen: false).getCurrentLocation();
+      context.read<UserHomeProvider>().loadHomeData(context);
+      context.read<PlacesProvider>().initialize();
+      context.read<UserHotelsProvider>().initialize();
+      context.read<LocationProvider>().getCurrentLocation();
     });
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
+  String _getInitials(String? name) {
+    if (name == null || name.isEmpty) return 'US';
+    
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    } else if (parts.isNotEmpty && parts[0].isNotEmpty) {
+      return parts[0].substring(0, parts[0].length >= 2 ? 2 : 1).toUpperCase();
+    }
+    return 'US';
   }
 
   @override
@@ -46,822 +46,401 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
     
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      body: SafeArea(
-        child: NestedScrollView(
-          headerSliverBuilder: (context, innerBoxIsScrolled) {
-            return [
-              // Location Header
-              SliverAppBar(
-                backgroundColor: theme.colorScheme.surface,
-                elevation: 0,
-                floating: false,
-                pinned: false,
-                automaticallyImplyLeading: false,
-                expandedHeight: 120,
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    child: Consumer<LocationProvider>(
-                      builder: (context, locationProvider, child) {
-                        return Row(
-                          children: [
-                            // Location
-                            Expanded(
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    CupertinoIcons.location_solid,
-                                    color: theme.colorScheme.primary,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: locationProvider.isLoading
-                                        ? Row(
-                                            children: [
-                                              SizedBox(
-                                                width: 12,
-                                                height: 12,
-                                                child: CircularProgressIndicator(
-                                                  strokeWidth: 2,
-                                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                                    theme.colorScheme.primary,
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                'Getting location...',
-                                                style: theme.textTheme.bodyMedium?.copyWith(
-                                                  color: theme.colorScheme.onSurfaceVariant,
-                                                ),
-                                              ),
-                                            ],
-                                          )
-                                        : GestureDetector(
-                                            onTap: () {
-                                              // Refresh location
-                                              locationProvider.getCurrentLocation();
-                                            },
-                                            child: Text(
-                                              locationProvider.currentAddress,
-                                              style: theme.textTheme.titleSmall?.copyWith(
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            
-                            // Profile Avatar
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: [
-                                    theme.colorScheme.primary,
-                                    theme.colorScheme.primary.withOpacity(0.8),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'JD',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-              
-              // Category Tabs
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _SliverTabBarDelegate(
-                  TabBar(
-                    controller: _tabController,
-                    tabs: const [
-                      Tab(text: 'Packages'),
-                      Tab(text: 'Places'),
-                      Tab(text: 'Hotels'),
-                    ],
-                    labelColor: theme.colorScheme.primary,
-                    unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
-                    indicatorColor: theme.colorScheme.primary,
-                    indicatorWeight: 3,
-                    dividerColor: theme.primaryColor.withAlpha(20),
-                    labelStyle: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                    unselectedLabelStyle: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.normal,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ),
-            ];
-          },
-          body: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildPackagesTab(),
-              _buildPlacesTab(),
-              _buildHotelsTab(),
-            ],
-          ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await Future.wait([
+            context.read<UserHomeProvider>().loadHomeData(context),
+            context.read<PlacesProvider>().initialize(),
+            context.read<UserHotelsProvider>().initialize(),
+            context.read<LocationProvider>().getCurrentLocation(),
+          ]);
+        },
+        child: CustomScrollView(
+          slivers: [
+            _buildHeaderSection(theme),
+            _buildFeaturedPackagesSection(theme),
+            _buildPopularPlacesSection(theme),
+            _buildTopHotelsSection(theme),
+            const SliverToBoxAdapter(child: SizedBox(height: 80)),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildPackagesTab() {
-    return Consumer<UserHomeProvider>(
-      builder: (context, provider, child) {
-        return RefreshIndicator(
-          onRefresh: () async {
-            await provider.loadHomeData(context);
-          },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildHeaderSection(ThemeData theme) {
+    return SliverToBoxAdapter(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 48, 20, 24),
+        child: Consumer2<UserProfileProvider, LocationProvider>(
+          builder: (context, profileProvider, locationProvider, child) {
+            final userName = profileProvider.userAccount?.name ?? 'User';
+            final initials = _getInitials(userName);
+            
+            return Row(
               children: [
-
-              // Latest Packages (latest 5)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${provider.totalPackages} Packages',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Welcome back,',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        userName,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: () => locationProvider.getCurrentLocation(),
+                        child: Row(
+                          children: [
+                            Icon(
+                              CupertinoIcons.location_solid,
+                              color: theme.colorScheme.primary,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: locationProvider.isLoading
+                                  ? Text(
+                                      'Getting location...',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    )
+                                  : Text(
+                                      locationProvider.currentAddress,
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.primary,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.colorScheme.primary,
+                        theme.colorScheme.primary.withOpacity(0.7),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {
-                      context.push('/packages');
-                    },
+                  child: Center(
                     child: Text(
-                      'See all',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w500,
+                      initials,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-
-              if (provider.isLoading)
-                const Center(child: CircularProgressIndicator())
-              else if (provider.latestPackages.isEmpty)
-                Center(
-                  child: Text(
-                    'No packages available',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                )
-              else
-                SizedBox(
-                  height: 280,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: provider.latestPackages.length,
-                    itemBuilder: (context, index) {
-                      final package = provider.latestPackages[index];
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          right: index < provider.latestPackages.length - 1 ? 16 : 0,
-                        ),
-                        child: _buildPackageCard(package),
-                      );
-                    },
-                  ),
                 ),
-
-              const SizedBox(height: 24),
-
-              // Featured (Recommended) Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Featured',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      context.push('/packages');
-                    },
-                    child: Text(
-                      'See all',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              if (provider.isLoading)
-                const Center(child: CircularProgressIndicator())
-              else if (provider.recommendedPackages.isEmpty)
-                Center(
-                  child: Text(
-                    'No recommended packages available',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                )
-              else
-                SizedBox(
-                  height: 200,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: provider.recommendedPackages.length,
-                    itemBuilder: (context, index) {
-                      final package = provider.recommendedPackages[index];
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          right: index < provider.recommendedPackages.length - 1 ? 16 : 0,
-                        ),
-                        child: _buildPackageCard(package),
-                      );
-                    },
-                  ),
-                ),
-
-              const SizedBox(height: 24),
-
-              // Top Packages Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Top Packages',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      context.push('/packages');
-                    },
-                    child: Text(
-                      'See all',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              if (provider.isLoading)
-                const Center(child: CircularProgressIndicator())
-              else if (provider.topPackages.isEmpty)
-                Center(
-                  child: Text(
-                    'No top packages available',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                )
-              else
-                SizedBox(
-                  height: 120,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: provider.topPackages.length,
-                    itemBuilder: (context, index) {
-                      final package = provider.topPackages[index];
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          right: index < provider.topPackages.length - 1 ? 12 : 0,
-                        ),
-                        child: _buildPackageCard(package),
-                      );
-                    },
-                  ),
-                ),
-            ],
-            ),
-          ),
-        );
-      },
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 
-  Widget _buildPlacesTab() {
-    return Consumer<PlacesProvider>(
-      builder: (context, provider, child) {
-        return RefreshIndicator(
-          onRefresh: () async {
-            await provider.initialize();
-          },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildFeaturedPackagesSection(ThemeData theme) {
+    return SliverToBoxAdapter(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Categories
                 Text(
-                  'Categories',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  'Featured Packages',
+                  style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 16),
-                
-                // Category Chips (clickable - navigate to category page)
-                if (provider.categories.isNotEmpty)
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: provider.categories.map((category) {
-                      return ActionChip(
-                        label: Text(category),
-                        onPressed: () {
-                          // Navigate to places by category page
-                          context.push('/places/category/$category');
-                        },
-                        backgroundColor: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
-                        labelStyle: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      );
-                    }).toList(),
+                TextButton.icon(
+                  onPressed: () => context.push('/packages'),
+                  label: Text(
+                    'See all',
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                
-                const SizedBox(height: 24),
-                
-                // Featured Places Section
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Featured',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        context.push('/places/featured');
-                      },
-                      child: Text(
-                        'See all',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
+                  icon: Icon(
+                    CupertinoIcons.arrow_right,
+                    size: 16,
+                    color: theme.colorScheme.primary,
+                  ),
+                  iconAlignment: IconAlignment.end,
                 ),
-                
-                const SizedBox(height: 12),
-                
-                if (provider.isLoading)
-                  const Center(child: CircularProgressIndicator())
-                else if (provider.featuredPlaces.isEmpty)
-                  Center(
-                    child: Text(
-                      'No featured places available',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  )
-                else
-                  SizedBox(
-                    height: 280,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: provider.featuredPlaces.length,
-                      itemBuilder: (context, index) {
-                        final place = provider.featuredPlaces[index];
-                        return Padding(
-                          padding: EdgeInsets.only(
-                            right: index < provider.featuredPlaces.length - 1 ? 16 : 0,
-                          ),
-                          child: _buildLargePlaceCard(place),
-                        );
-                      },
-                    ),
-                  ),
-                
-                const SizedBox(height: 24),
-                
-                // Latest Places Section
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${provider.totalPlaces} Places',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        context.push('/places');
-                      },
-                      child: Text(
-                        'See all',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                
-                const SizedBox(height: 12),
-                
-                if (provider.isLoading)
-                  const Center(child: CircularProgressIndicator())
-                else if (provider.latestPlaces.isEmpty)
-                  Center(
-                    child: Text(
-                      'No places available',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  )
-                else
-                  SizedBox(
-                    height: 200,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: provider.latestPlaces.length,
-                      itemBuilder: (context, index) {
-                        final place = provider.latestPlaces[index];
-                        return Padding(
-                          padding: EdgeInsets.only(
-                            right: index < provider.latestPlaces.length - 1 ? 16 : 0,
-                          ),
-                          child: _buildSmallPlaceCard(place),
-                        );
-                      },
-                    ),
-                  ),
               ],
             ),
           ),
-        );
-      },
-    );
-  }
-
-  Widget _buildHotelsTab() {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              CupertinoIcons.building_2_fill,
-              size: 80,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Hotels Coming Soon',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Hotel booking feature will be available soon',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLargePlaceCard(PlaceModel place) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: () {
-        context.push('/place-details/${place.id}');
-      },
-      child: Container(
-        height: 200,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: theme.colorScheme.shadow.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            children: [
-              // Background Image
-              Container(
-                height: 200,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: place.coverImage.isNotEmpty
-                        ? NetworkImage(place.coverImage)
-                        : const AssetImage('assets/images/placeholder.png') as ImageProvider,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              
-              // Gradient overlay
-              Container(
-                height: 200,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.7),
+          Consumer<UserHomeProvider>(
+            builder: (context, provider, _) {
+              if (provider.isLoading) {
+                return Container(
+                  height: 280,
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator(color: theme.colorScheme.primary),
+                );
+              }
+              if (provider.latestPackages.isEmpty) {
+                return Container(
+                  height: 280,
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(CupertinoIcons.cube_box, size: 48, color: theme.colorScheme.onSurfaceVariant),
+                      const SizedBox(height: 12),
+                      Text('No packages available', style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                     ],
                   ),
-                ),
-              ),
-              
-              // Content
-              Positioned(
-                bottom: 16,
-                left: 16,
-                right: 16,
-                child: Text(
-                  place.name,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              
-              // Favorite icon
-              Positioned(
-                top: 16,
-                right: 16,
-                child: Consumer<UserFavoritesProvider>(
-                  builder: (context, favProvider, child) {
-                    final isFavorite = favProvider.favorites.any(
-                      (fav) => fav.itemId == place.id && 
-                               fav.itemType == FavoriteItemType.place,
-                    );
-
-                    return GestureDetector(
-                      onTap: () async {
-                        if (isFavorite) {
-                          await favProvider.removeFromFavorites(
-                            itemType: FavoriteItemType.place,
-                            itemId: place.id,
-                          );
-                        } else {
-                          await favProvider.addToFavorites(
-                            itemType: FavoriteItemType.place,
-                            itemId: place.id,
-                          );
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          isFavorite
-                              ? CupertinoIcons.heart_fill
-                              : CupertinoIcons.heart,
-                          color: isFavorite ? Colors.red : Colors.white,
-                          size: 20,
-                        ),
-                      ),
+                );
+              }
+              return SizedBox(
+                height: 280,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: provider.latestPackages.length,
+                  itemBuilder: (context, index) {
+                    final package = provider.latestPackages[index];
+                    return Padding(
+                      padding: EdgeInsets.only(right: index < provider.latestPackages.length - 1 ? 16 : 0),
+                      child: _buildPackageCard(theme, package),
                     );
                   },
                 ),
-              ),
-            ],
+              );
+            },
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildSmallPlaceCard(PlaceModel place) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: () {
-        context.push('/place-details/${place.id}');
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: theme.colorScheme.shadow.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Stack(
-            children: [
-              // Background Image
-              Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: place.coverImage.isNotEmpty
-                        ? NetworkImage(place.coverImage)
-                        : const AssetImage('assets/images/placeholder.png') as ImageProvider,
-                    fit: BoxFit.cover,
+  Widget _buildPopularPlacesSection(ThemeData theme) {
+    return SliverToBoxAdapter(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Popular Places',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-              
-              // Gradient overlay
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.7),
+                TextButton.icon(
+                  onPressed: () => context.push('/places'),
+                  label: Text(
+                    'See all',
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  icon: Icon(
+                    CupertinoIcons.arrow_right,
+                    size: 16,
+                    color: theme.colorScheme.primary,
+                  ),
+                  iconAlignment: IconAlignment.end,
+                ),
+              ],
+            ),
+          ),
+          Consumer<PlacesProvider>(
+            builder: (context, provider, _) {
+              if (provider.isLoading) {
+                return Container(
+                  height: 200,
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator(color: theme.colorScheme.primary),
+                );
+              }
+              if (provider.latestPlaces.isEmpty) {
+                return Container(
+                  height: 200,
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(CupertinoIcons.map, size: 48, color: theme.colorScheme.onSurfaceVariant),
+                      const SizedBox(height: 12),
+                      Text('No places available', style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                     ],
                   ),
+                );
+              }
+              return SizedBox(
+                height: 200,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: provider.latestPlaces.length,
+                  itemBuilder: (context, index) {
+                    final place = provider.latestPlaces[index];
+                    return Padding(
+                      padding: EdgeInsets.only(right: index < provider.latestPlaces.length - 1 ? 16 : 0),
+                      child: _buildPlaceCard(theme, place),
+                    );
+                  },
                 ),
-              ),
-              
-              // Content - Place Name and Favorite Button
-              Positioned(
-                bottom: 12,
-                left: 12,
-                right: 12,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        place.name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Consumer<UserFavoritesProvider>(
-                      builder: (context, favoritesProvider, _) {
-                        final isFavorite = favoritesProvider.favorites
-                            .any((fav) => fav.itemId == place.id && fav.itemType == FavoriteItemType.place);
-                        
-                        return GestureDetector(
-                          onTap: () {
-                            if (isFavorite) {
-                              favoritesProvider.removeFromFavorites(
-                                itemId: place.id,
-                                itemType: FavoriteItemType.place,
-                              );
-                            } else {
-                              favoritesProvider.addToFavorites(
-                                itemId: place.id,
-                                itemType: FavoriteItemType.place,
-                              );
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.3),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              isFavorite ? CupertinoIcons.heart_fill : CupertinoIcons.heart,
-                              color: isFavorite ? Colors.red : Colors.white,
-                              size: 18,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              );
+            },
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildPackageCard(dynamic package) {
-    final theme = Theme.of(context);
+  Widget _buildTopHotelsSection(ThemeData theme) {
+    return SliverToBoxAdapter(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Top Hotels',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => context.push('/hotels'),
+                  label: Text(
+                    'See all',
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  icon: Icon(
+                    CupertinoIcons.arrow_right,
+                    size: 16,
+                    color: theme.colorScheme.primary,
+                  ),
+                  iconAlignment: IconAlignment.end,
+                ),
+              ],
+            ),
+          ),
+          Consumer<UserHotelsProvider>(
+            builder: (context, provider, _) {
+              if (provider.isLoading) {
+                return Container(
+                  height: 240,
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator(color: theme.colorScheme.primary),
+                );
+              }
+              if (provider.latestHotels.isEmpty) {
+                return Container(
+                  height: 240,
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(CupertinoIcons.building_2_fill, size: 48, color: theme.colorScheme.onSurfaceVariant),
+                      const SizedBox(height: 12),
+                      Text('No hotels available', style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                    ],
+                  ),
+                );
+              }
+              return SizedBox(
+                height: 240,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: provider.latestHotels.length,
+                  itemBuilder: (context, index) {
+                    final hotel = provider.latestHotels[index];
+                    return Padding(
+                      padding: EdgeInsets.only(right: index < provider.latestHotels.length - 1 ? 16 : 0),
+                      child: _buildHotelCard(theme, hotel),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPackageCard(ThemeData theme, dynamic package) {
     return GestureDetector(
-      onTap: () {
-        context.push('/package-details/${package.id}');
-      },
+      onTap: () => context.push('/package-details/${package.id}'),
       child: Container(
-        width: 280,
+        width: 240,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: theme.colorScheme.shadow.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          boxShadow: [BoxShadow(color: theme.colorScheme.shadow.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: Stack(
             children: [
-              // Package Image
               Container(
                 height: 280,
                 decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: package.coverImage.isNotEmpty
-                        ? NetworkImage(package.coverImage)
-                        : const AssetImage('assets/images/placeholder.png') as ImageProvider,
-                    fit: BoxFit.cover,
-                  ),
+                  color: theme.colorScheme.surfaceVariant,
+                  image: package.coverImage != null && package.coverImage.isNotEmpty
+                      ? DecorationImage(image: NetworkImage(package.coverImage), fit: BoxFit.cover)
+                      : null,
                 ),
+                child: package.coverImage == null || package.coverImage.isEmpty
+                    ? Center(child: Icon(CupertinoIcons.photo, size: 60, color: theme.colorScheme.onSurfaceVariant))
+                    : null,
               ),
-              
-              // Gradient overlay
               Container(
                 height: 280,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.7),
-                    ],
+                    colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
                   ),
                 ),
               ),
-              
-              // Content
               Positioned(
                 bottom: 16,
                 left: 16,
@@ -869,65 +448,200 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Package title
                     Text(
-                      package.name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      package.name ?? 'Unknown Package',
+                      style: theme.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    
                     const SizedBox(height: 4),
-                    
-                    // Location
-                    Text(
-                      '${package.destination}, ${package.country}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withOpacity(0.8),
-                      ),
+                    Row(
+                      children: [
+                        Icon(CupertinoIcons.location_solid, color: Colors.white.withOpacity(0.8), size: 14),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            '${package.destination ?? 'Unknown'}, ${package.country ?? ''}',
+                            style: theme.textTheme.bodySmall?.copyWith(color: Colors.white.withOpacity(0.8)),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
-                    
                     const SizedBox(height: 8),
-                    
-                    // Price
-                    
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (package.price != null)
+                          Text('\$${package.price}', style: theme.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                        if (package.rating != null)
+                          Row(
+                            children: [
+                              Icon(CupertinoIcons.star_fill, color: Colors.amber, size: 16),
+                              const SizedBox(width: 4),
+                              Text(package.rating.toString(), style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                      ],
+                    ),
                   ],
                 ),
               ),
-              
-              // (rating badge removed per design)
             ],
           ),
         ),
       ),
     );
   }
-}
 
-class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar _tabBar;
-
-  _SliverTabBarDelegate(this._tabBar);
-
-  @override
-  double get minExtent => _tabBar.preferredSize.height;
-
-  @override
-  double get maxExtent => _tabBar.preferredSize.height;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: Theme.of(context).colorScheme.surface,
-      child: _tabBar,
+  Widget _buildPlaceCard(ThemeData theme, dynamic place) {
+    return GestureDetector(
+      onTap: () => context.push('/place-details/${place.id}'),
+      child: Container(
+        width: 280,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: theme.colorScheme.shadow.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            children: [
+              Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceVariant,
+                  image: place.coverImage != null && place.coverImage.isNotEmpty
+                      ? DecorationImage(image: NetworkImage(place.coverImage), fit: BoxFit.cover)
+                      : null,
+                ),
+                child: place.coverImage == null || place.coverImage.isEmpty
+                    ? Center(child: Icon(CupertinoIcons.photo, size: 48, color: theme.colorScheme.onSurfaceVariant))
+                    : null,
+              ),
+              Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 12,
+                left: 12,
+                right: 12,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      place.name ?? 'Unknown Place',
+                      style: theme.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(CupertinoIcons.location_solid, color: Colors.white.withOpacity(0.8), size: 14),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            '${place.city ?? 'Unknown'}, ${place.country ?? ''}',
+                            style: theme.textTheme.bodySmall?.copyWith(color: Colors.white.withOpacity(0.8)),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  @override
-  bool shouldRebuild(_SliverTabBarDelegate oldDelegate) {
-    return false;
+  Widget _buildHotelCard(ThemeData theme, dynamic hotel) {
+    return GestureDetector(
+      onTap: () => context.push('/hotel-details/${hotel.id}'),
+      child: Container(
+        width: 260,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: theme.colorScheme.shadow.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: Container(
+                height: 160,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceVariant,
+                  image: hotel.coverImage != null && hotel.coverImage.isNotEmpty
+                      ? DecorationImage(image: NetworkImage(hotel.coverImage), fit: BoxFit.cover)
+                      : null,
+                ),
+                child: hotel.coverImage == null || hotel.coverImage.isEmpty
+                    ? Center(child: Icon(CupertinoIcons.building_2_fill, size: 48, color: theme.colorScheme.onSurfaceVariant))
+                    : null,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    hotel.name ?? 'Unknown Hotel',
+                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(CupertinoIcons.location_solid, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          '${hotel.city ?? 'Unknown'}, ${hotel.country ?? ''}',
+                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      if (hotel.rating != null) ...[
+                        Icon(CupertinoIcons.star_fill, color: Colors.amber, size: 16),
+                        const SizedBox(width: 4),
+                        Text(hotel.rating.toStringAsFixed(1), style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
+                      ],
+                      if (hotel.reviewsCount != null) ...[
+                        const SizedBox(width: 4),
+                        Text('(${hotel.reviewsCount})', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
