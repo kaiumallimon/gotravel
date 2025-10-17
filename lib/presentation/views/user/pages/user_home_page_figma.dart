@@ -30,7 +30,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
 
   String _getInitials(String? name) {
     if (name == null || name.isEmpty) return 'US';
-    
+
     final parts = name.trim().split(' ');
     if (parts.length >= 2) {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
@@ -43,7 +43,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: RefreshIndicator(
@@ -65,104 +65,220 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
             _buildRecentlyAddedPlacesSection(theme),
             _buildRecentlyAddedPackagesSection(theme),
             _buildRecentlyAddedHotelsSection(theme),
-            const SliverToBoxAdapter(child: SizedBox(height: 200)),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: MediaQuery.of(context).padding.bottom + 100,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeaderSection(ThemeData theme) {
+Widget _buildHeaderSection(ThemeData theme) {
     return Consumer2<UserProfileProvider, LocationProvider>(
       builder: (context, profileProvider, locationProvider, child) {
         final userName = profileProvider.userAccount?.name ?? 'User';
         final initials = _getInitials(userName);
-        
+
         return SliverAppBar(
-          expandedHeight: 160,
-          floating: false,
           pinned: true,
+          floating: false,
+          expandedHeight: 160,
           backgroundColor: theme.colorScheme.surface,
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           flexibleSpace: LayoutBuilder(
             builder: (context, constraints) {
-              // Calculate how much the app bar is expanded
-              final expandRatio = (constraints.maxHeight - kToolbarHeight) / 
-                                  (160 - kToolbarHeight);
+              final expandRatio =
+                  (constraints.maxHeight - (kToolbarHeight + 30)) /
+                  (160 - (kToolbarHeight + 30));
               final isExpanded = expandRatio > 0.5;
-              
+
               return FlexibleSpaceBar(
                 titlePadding: EdgeInsets.zero,
                 centerTitle: false,
-                background: Container(
-                  padding: const EdgeInsets.fromLTRB(20, 48, 20, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Row(
+                background: SafeArea(
+                  bottom: false,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(20, 48, 20, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Spacer(),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Welcome back,',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    userName,
+                                    style: theme.textTheme.headlineSmall
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: theme.colorScheme.onSurface,
+                                        ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  GestureDetector(
+                                    onTap: () =>
+                                        locationProvider.getCurrentLocation(),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          CupertinoIcons.location_solid,
+                                          color: theme.colorScheme.primary,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: locationProvider.isLoading
+                                              ? Text(
+                                                  'Getting location...',
+                                                  style: theme
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        color: theme
+                                                            .colorScheme
+                                                            .onSurfaceVariant,
+                                                      ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                )
+                                              : Text(
+                                                  locationProvider
+                                                      .currentAddress,
+                                                  style: theme
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        color: theme
+                                                            .colorScheme
+                                                            .primary,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: [
+                                    theme.colorScheme.primary,
+                                    theme.colorScheme.primary.withOpacity(0.7),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  initials,
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          height: isExpanded ? 24 : 16,
+                        ), // ✅ adaptive padding
+                      ],
+                    ),
+                  ),
+                ),
+                title: SafeArea(
+                  child: AnimatedOpacity(
+                    opacity: isExpanded ? 0.0 : 1.0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: isExpanded 
+                              ? Colors.transparent 
+                              : theme.colorScheme.outlineVariant.withOpacity(0.5),
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      child: Row(
                         children: [
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Welcome back,',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
+                            child: GestureDetector(
+                              onTap: () => locationProvider.getCurrentLocation(),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    CupertinoIcons.location_solid,
+                                    color: theme.colorScheme.primary,
+                                    size: 16,
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  userName,
-                                  style: theme.textTheme.headlineSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: theme.colorScheme.onSurface,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 8),
-                                GestureDetector(
-                                  onTap: () => locationProvider.getCurrentLocation(),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        CupertinoIcons.location_solid,
-                                        color: theme.colorScheme.primary,
-                                        size: 16,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Expanded(
-                                        child: locationProvider.isLoading
-                                            ? Text(
-                                                'Getting location...',
-                                                style: theme.textTheme.bodySmall?.copyWith(
-                                                  color: theme.colorScheme.onSurfaceVariant,
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: locationProvider.isLoading
+                                        ? Text(
+                                            'Getting location...',
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  color: theme
+                                                      .colorScheme
+                                                      .onSurfaceVariant,
                                                 ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              )
-                                            : Text(
-                                                locationProvider.currentAddress,
-                                                style: theme.textTheme.bodySmall?.copyWith(
-                                                  color: theme.colorScheme.primary,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          )
+                                        : Text(
+                                            locationProvider.currentAddress,
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  color:
+                                                      theme.colorScheme.primary,
                                                   fontWeight: FontWeight.w500,
                                                 ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                      ),
-                                    ],
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
+                          const SizedBox(width: 12),
                           Container(
-                            width: 56,
-                            height: 56,
+                            width: 40,
+                            height: 40,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: LinearGradient(
@@ -177,7 +293,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                             child: Center(
                               child: Text(
                                 initials,
-                                style: theme.textTheme.titleSmall?.copyWith(
+                                style: theme.textTheme.labelMedium?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -186,77 +302,6 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-                title: AnimatedOpacity(
-                  opacity: isExpanded ? 0.0 : 1.0,
-                  duration: const Duration(milliseconds: 200),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => locationProvider.getCurrentLocation(),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  CupertinoIcons.location_solid,
-                                  color: theme.colorScheme.primary,
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: locationProvider.isLoading
-                                      ? Text(
-                                          'Getting location...',
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            color: theme.colorScheme.onSurfaceVariant,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        )
-                                      : Text(
-                                          locationProvider.currentAddress,
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            color: theme.colorScheme.primary,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [
-                                theme.colorScheme.primary,
-                                theme.colorScheme.primary.withOpacity(0.7),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              initials,
-                              style: theme.textTheme.labelMedium?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
                     ),
                   ),
                 ),
@@ -267,8 +312,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
       },
     );
   }
-
-  Widget _buildFeaturedPackagesSection(ThemeData theme) {
+ Widget _buildFeaturedPackagesSection(ThemeData theme) {
     return SliverToBoxAdapter(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,7 +353,9 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                 return Container(
                   height: 280,
                   alignment: Alignment.center,
-                  child: CircularProgressIndicator(color: theme.colorScheme.primary),
+                  child: CircularProgressIndicator(
+                    color: theme.colorScheme.primary,
+                  ),
                 );
               }
               final featuredPackages = provider.featuredPackages;
@@ -320,9 +366,18 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(CupertinoIcons.cube_box, size: 48, color: theme.colorScheme.onSurfaceVariant),
+                      Icon(
+                        CupertinoIcons.cube_box,
+                        size: 48,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                       const SizedBox(height: 12),
-                      Text('No packages available', style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                      Text(
+                        'No packages available',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -336,7 +391,9 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   itemBuilder: (context, index) {
                     final package = featuredPackages[index];
                     return Padding(
-                      padding: EdgeInsets.only(right: index < featuredPackages.length - 1 ? 16 : 0),
+                      padding: EdgeInsets.only(
+                        right: index < featuredPackages.length - 1 ? 16 : 0,
+                      ),
                       child: _buildPackageCard(theme, package),
                     );
                   },
@@ -390,7 +447,9 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                 return Container(
                   height: 200,
                   alignment: Alignment.center,
-                  child: CircularProgressIndicator(color: theme.colorScheme.primary),
+                  child: CircularProgressIndicator(
+                    color: theme.colorScheme.primary,
+                  ),
                 );
               }
               final places = provider.places;
@@ -401,9 +460,18 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(CupertinoIcons.map, size: 48, color: theme.colorScheme.onSurfaceVariant),
+                      Icon(
+                        CupertinoIcons.map,
+                        size: 48,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                       const SizedBox(height: 12),
-                      Text('No places available', style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                      Text(
+                        'No places available',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -417,7 +485,9 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   itemBuilder: (context, index) {
                     final place = places[index];
                     return Padding(
-                      padding: EdgeInsets.only(right: index < places.length - 1 ? 16 : 0),
+                      padding: EdgeInsets.only(
+                        right: index < places.length - 1 ? 16 : 0,
+                      ),
                       child: _buildPlaceCard(theme, place),
                     );
                   },
@@ -439,14 +509,16 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       '$total Packages',
-                      style: theme.textTheme.titleSmall?.copyWith(
-                      ),
+                      style: theme.textTheme.titleSmall?.copyWith(),
                     ),
                     TextButton.icon(
                       onPressed: () => context.push('/packages'),
@@ -471,7 +543,9 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                 Container(
                   height: 280,
                   alignment: Alignment.center,
-                  child: CircularProgressIndicator(color: theme.colorScheme.primary),
+                  child: CircularProgressIndicator(
+                    color: theme.colorScheme.primary,
+                  ),
                 )
               else if (provider.randomPackages.isEmpty)
                 Container(
@@ -480,9 +554,18 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(CupertinoIcons.cube_box, size: 48, color: theme.colorScheme.onSurfaceVariant),
+                      Icon(
+                        CupertinoIcons.cube_box,
+                        size: 48,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                       const SizedBox(height: 12),
-                      Text('No packages available', style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                      Text(
+                        'No packages available',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 )
@@ -496,7 +579,11 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                     itemBuilder: (context, index) {
                       final package = provider.randomPackages[index];
                       return Padding(
-                        padding: EdgeInsets.only(right: index < provider.randomPackages.length - 1 ? 16 : 0),
+                        padding: EdgeInsets.only(
+                          right: index < provider.randomPackages.length - 1
+                              ? 16
+                              : 0,
+                        ),
                         child: _buildPackageCard(theme, package),
                       );
                     },
@@ -518,14 +605,16 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       '$total Hotels',
-                      style: theme.textTheme.titleSmall?.copyWith(
-                      ),
+                      style: theme.textTheme.titleSmall?.copyWith(),
                     ),
                     TextButton.icon(
                       onPressed: () => context.push('/hotels'),
@@ -550,7 +639,9 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                 Container(
                   height: 240,
                   alignment: Alignment.center,
-                  child: CircularProgressIndicator(color: theme.colorScheme.primary),
+                  child: CircularProgressIndicator(
+                    color: theme.colorScheme.primary,
+                  ),
                 )
               else if (provider.randomHotels.isEmpty)
                 Container(
@@ -559,9 +650,18 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(CupertinoIcons.building_2_fill, size: 48, color: theme.colorScheme.onSurfaceVariant),
+                      Icon(
+                        CupertinoIcons.building_2_fill,
+                        size: 48,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                       const SizedBox(height: 12),
-                      Text('No hotels available', style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                      Text(
+                        'No hotels available',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 )
@@ -575,7 +675,11 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                     itemBuilder: (context, index) {
                       final hotel = provider.randomHotels[index];
                       return Padding(
-                        padding: EdgeInsets.only(right: index < provider.randomHotels.length - 1 ? 16 : 0),
+                        padding: EdgeInsets.only(
+                          right: index < provider.randomHotels.length - 1
+                              ? 16
+                              : 0,
+                        ),
                         child: _buildHotelCard(theme, hotel),
                       );
                     },
@@ -629,7 +733,9 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                 return Container(
                   height: 200,
                   alignment: Alignment.center,
-                  child: CircularProgressIndicator(color: theme.colorScheme.primary),
+                  child: CircularProgressIndicator(
+                    color: theme.colorScheme.primary,
+                  ),
                 );
               }
               final places = provider.latestPlaces;
@@ -640,9 +746,18 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(CupertinoIcons.map, size: 48, color: theme.colorScheme.onSurfaceVariant),
+                      Icon(
+                        CupertinoIcons.map,
+                        size: 48,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                       const SizedBox(height: 12),
-                      Text('No places available', style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                      Text(
+                        'No places available',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -656,7 +771,9 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   itemBuilder: (context, index) {
                     final place = places[index];
                     return Padding(
-                      padding: EdgeInsets.only(right: index < places.length - 1 ? 16 : 0),
+                      padding: EdgeInsets.only(
+                        right: index < places.length - 1 ? 16 : 0,
+                      ),
                       child: _buildPlaceCard(theme, place),
                     );
                   },
@@ -710,7 +827,9 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                 return Container(
                   height: 280,
                   alignment: Alignment.center,
-                  child: CircularProgressIndicator(color: theme.colorScheme.primary),
+                  child: CircularProgressIndicator(
+                    color: theme.colorScheme.primary,
+                  ),
                 );
               }
               final packages = provider.recentlyAddedPackages;
@@ -721,9 +840,18 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(CupertinoIcons.cube_box, size: 48, color: theme.colorScheme.onSurfaceVariant),
+                      Icon(
+                        CupertinoIcons.cube_box,
+                        size: 48,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                       const SizedBox(height: 12),
-                      Text('No packages available', style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                      Text(
+                        'No packages available',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -737,7 +865,9 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   itemBuilder: (context, index) {
                     final package = packages[index];
                     return Padding(
-                      padding: EdgeInsets.only(right: index < packages.length - 1 ? 16 : 0),
+                      padding: EdgeInsets.only(
+                        right: index < packages.length - 1 ? 16 : 0,
+                      ),
                       child: _buildPackageCard(theme, package),
                     );
                   },
@@ -791,7 +921,9 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                 return Container(
                   height: 240,
                   alignment: Alignment.center,
-                  child: CircularProgressIndicator(color: theme.colorScheme.primary),
+                  child: CircularProgressIndicator(
+                    color: theme.colorScheme.primary,
+                  ),
                 );
               }
               final hotels = provider.recentlyAddedHotels;
@@ -802,9 +934,18 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(CupertinoIcons.building_2_fill, size: 48, color: theme.colorScheme.onSurfaceVariant),
+                      Icon(
+                        CupertinoIcons.building_2_fill,
+                        size: 48,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                       const SizedBox(height: 12),
-                      Text('No hotels available', style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                      Text(
+                        'No hotels available',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -818,7 +959,9 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   itemBuilder: (context, index) {
                     final hotel = hotels[index];
                     return Padding(
-                      padding: EdgeInsets.only(right: index < hotels.length - 1 ? 16 : 0),
+                      padding: EdgeInsets.only(
+                        right: index < hotels.length - 1 ? 16 : 0,
+                      ),
                       child: _buildHotelCard(theme, hotel),
                     );
                   },
@@ -836,9 +979,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
       onTap: () => context.push('/package-details/${package.id}'),
       child: Container(
         width: 240,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: Stack(
@@ -847,12 +988,23 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                 height: 280,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceVariant,
-                  image: package.coverImage != null && package.coverImage.isNotEmpty
-                      ? DecorationImage(image: NetworkImage(package.coverImage), fit: BoxFit.cover)
+                  image:
+                      package.coverImage != null &&
+                          package.coverImage.isNotEmpty
+                      ? DecorationImage(
+                          image: NetworkImage(package.coverImage),
+                          fit: BoxFit.cover,
+                        )
                       : null,
                 ),
                 child: package.coverImage == null || package.coverImage.isEmpty
-                    ? Center(child: Icon(CupertinoIcons.photo, size: 60, color: theme.colorScheme.onSurfaceVariant))
+                    ? Center(
+                        child: Icon(
+                          CupertinoIcons.photo,
+                          size: 60,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      )
                     : null,
               ),
               Container(
@@ -874,19 +1026,28 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   children: [
                     Text(
                       package.name ?? 'Unknown Package',
-                      style: theme.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(CupertinoIcons.location_solid, color: Colors.white.withOpacity(0.8), size: 14),
+                        Icon(
+                          CupertinoIcons.location_solid,
+                          color: Colors.white.withOpacity(0.8),
+                          size: 14,
+                        ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             '${package.destination ?? 'Unknown'}, ${package.country ?? ''}',
-                            style: theme.textTheme.bodySmall?.copyWith(color: Colors.white.withOpacity(0.8)),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.white.withOpacity(0.8),
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -898,13 +1059,29 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         if (package.price != null)
-                          Text('\$${package.price}', style: theme.textTheme.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                          Text(
+                            '\$${package.price}',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         if (package.rating != null)
                           Row(
                             children: [
-                              Icon(CupertinoIcons.star_fill, color: Colors.amber, size: 16),
+                              Icon(
+                                CupertinoIcons.star_fill,
+                                color: Colors.amber,
+                                size: 16,
+                              ),
                               const SizedBox(width: 4),
-                              Text(package.rating.toString(), style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                              Text(
+                                package.rating.toString(),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ],
                           ),
                       ],
@@ -924,9 +1101,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
       onTap: () => context.push('/place-details/${place.id}'),
       child: Container(
         width: 280,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: Stack(
@@ -936,11 +1111,20 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceVariant,
                   image: place.coverImage != null && place.coverImage.isNotEmpty
-                      ? DecorationImage(image: NetworkImage(place.coverImage), fit: BoxFit.cover)
+                      ? DecorationImage(
+                          image: NetworkImage(place.coverImage),
+                          fit: BoxFit.cover,
+                        )
                       : null,
                 ),
                 child: place.coverImage == null || place.coverImage.isEmpty
-                    ? Center(child: Icon(CupertinoIcons.photo, size: 48, color: theme.colorScheme.onSurfaceVariant))
+                    ? Center(
+                        child: Icon(
+                          CupertinoIcons.photo,
+                          size: 48,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      )
                     : null,
               ),
               Container(
@@ -962,19 +1146,28 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   children: [
                     Text(
                       place.name ?? 'Unknown Place',
-                      style: theme.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(CupertinoIcons.location_solid, color: Colors.white.withOpacity(0.8), size: 14),
+                        Icon(
+                          CupertinoIcons.location_solid,
+                          color: Colors.white.withOpacity(0.8),
+                          size: 14,
+                        ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             '${place.city ?? 'Unknown'}, ${place.country ?? ''}',
-                            style: theme.textTheme.bodySmall?.copyWith(color: Colors.white.withOpacity(0.8)),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: Colors.white.withOpacity(0.8),
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1005,17 +1198,28 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
               child: Container(
                 height: 140,
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceVariant,
                   image: hotel.coverImage != null && hotel.coverImage.isNotEmpty
-                      ? DecorationImage(image: NetworkImage(hotel.coverImage), fit: BoxFit.cover)
+                      ? DecorationImage(
+                          image: NetworkImage(hotel.coverImage),
+                          fit: BoxFit.cover,
+                        )
                       : null,
                 ),
                 child: hotel.coverImage == null || hotel.coverImage.isEmpty
-                    ? Center(child: Icon(CupertinoIcons.building_2_fill, size: 48, color: theme.colorScheme.onSurfaceVariant))
+                    ? Center(
+                        child: Icon(
+                          CupertinoIcons.building_2_fill,
+                          size: 48,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      )
                     : null,
               ),
             ),
@@ -1027,19 +1231,27 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                 children: [
                   Text(
                     hotel.name ?? 'Unknown Hotel',
-                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(CupertinoIcons.location_solid, size: 12, color: theme.colorScheme.onSurfaceVariant),
+                      Icon(
+                        CupertinoIcons.location_solid,
+                        size: 12,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           '${hotel.city ?? 'Unknown'}, ${hotel.country ?? ''}',
-                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -1050,13 +1262,27 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   Row(
                     children: [
                       if (hotel.rating != null) ...[
-                        Icon(CupertinoIcons.star_fill, color: Colors.amber, size: 14),
+                        Icon(
+                          CupertinoIcons.star_fill,
+                          color: Colors.amber,
+                          size: 14,
+                        ),
                         const SizedBox(width: 4),
-                        Text(hotel.rating.toStringAsFixed(1), style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold)),
+                        Text(
+                          hotel.rating.toStringAsFixed(1),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                       if (hotel.reviewsCount != null) ...[
                         const SizedBox(width: 4),
-                        Text('(${hotel.reviewsCount})', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                        Text(
+                          '(${hotel.reviewsCount})',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                       ],
                     ],
                   ),
