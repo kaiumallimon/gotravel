@@ -10,7 +10,6 @@ class UserHotelsService {
       final response = await _supabase
           .from('hotels')
           .select('*, rooms(*)')
-          .eq('is_active', true)
           .order('created_at', ascending: false);
 
       final List data = response;
@@ -26,7 +25,6 @@ class UserHotelsService {
       final response = await _supabase
           .from('hotels')
           .select('*, rooms(*)')
-          .eq('is_active', true)
           .eq('city', city)
           .order('rating', ascending: false);
 
@@ -43,7 +41,6 @@ class UserHotelsService {
       final response = await _supabase
           .from('hotels')
           .select('*, rooms(*)')
-          .eq('is_active', true)
           .eq('country', country)
           .order('rating', ascending: false);
 
@@ -59,8 +56,7 @@ class UserHotelsService {
     try {
       final response = await _supabase
           .from('hotels')
-          .select('city')
-          .eq('is_active', true);
+          .select('city');
 
       final List data = response;
       final cities = data
@@ -81,8 +77,7 @@ class UserHotelsService {
     try {
       final response = await _supabase
           .from('hotels')
-          .select('country')
-          .eq('is_active', true);
+          .select('country');
 
       final List data = response;
       final countries = data
@@ -137,7 +132,6 @@ class UserHotelsService {
       final response = await _supabase
           .from('hotels')
           .select('*, rooms(*)')
-          .eq('is_active', true)
           .or('name.ilike.%$query%,city.ilike.%$query%,address.ilike.%$query%')
           .order('rating', ascending: false);
 

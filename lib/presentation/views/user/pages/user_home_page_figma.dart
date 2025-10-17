@@ -60,7 +60,11 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
             _buildHeaderSection(theme),
             _buildFeaturedPackagesSection(theme),
             _buildPopularPlacesSection(theme),
-            _buildTopHotelsSection(theme),
+            _buildAllPackagesSection(theme),
+            _buildAllHotelsSection(theme),
+            _buildRecentlyAddedPlacesSection(theme),
+            _buildRecentlyAddedPackagesSection(theme),
+            _buildRecentlyAddedHotelsSection(theme),
             const SliverToBoxAdapter(child: SizedBox(height: 80)),
           ],
         ),
@@ -210,7 +214,8 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   child: CircularProgressIndicator(color: theme.colorScheme.primary),
                 );
               }
-              if (provider.latestPackages.isEmpty) {
+              final featuredPackages = provider.featuredPackages;
+              if (featuredPackages.isEmpty) {
                 return Container(
                   height: 280,
                   alignment: Alignment.center,
@@ -229,11 +234,11 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: provider.latestPackages.length,
+                  itemCount: featuredPackages.length,
                   itemBuilder: (context, index) {
-                    final package = provider.latestPackages[index];
+                    final package = featuredPackages[index];
                     return Padding(
-                      padding: EdgeInsets.only(right: index < provider.latestPackages.length - 1 ? 16 : 0),
+                      padding: EdgeInsets.only(right: index < featuredPackages.length - 1 ? 16 : 0),
                       child: _buildPackageCard(theme, package),
                     );
                   },
@@ -290,7 +295,8 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   child: CircularProgressIndicator(color: theme.colorScheme.primary),
                 );
               }
-              if (provider.latestPlaces.isEmpty) {
+              final places = provider.places;
+              if (places.isEmpty) {
                 return Container(
                   height: 200,
                   alignment: Alignment.center,
@@ -309,11 +315,11 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: provider.latestPlaces.length,
+                  itemCount: places.length,
                   itemBuilder: (context, index) {
-                    final place = provider.latestPlaces[index];
+                    final place = places[index];
                     return Padding(
-                      padding: EdgeInsets.only(right: index < provider.latestPlaces.length - 1 ? 16 : 0),
+                      padding: EdgeInsets.only(right: index < places.length - 1 ? 16 : 0),
                       child: _buildPlaceCard(theme, place),
                     );
                   },
@@ -326,7 +332,167 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
     );
   }
 
-  Widget _buildTopHotelsSection(ThemeData theme) {
+  Widget _buildAllPackagesSection(ThemeData theme) {
+    return SliverToBoxAdapter(
+      child: Consumer<UserHomeProvider>(
+        builder: (context, provider, _) {
+          final total = provider.totalPackagesCount;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '$total Packages',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => context.push('/packages'),
+                      label: Text(
+                        'See all',
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      icon: Icon(
+                        CupertinoIcons.arrow_right,
+                        size: 16,
+                        color: theme.colorScheme.primary,
+                      ),
+                      iconAlignment: IconAlignment.end,
+                    ),
+                  ],
+                ),
+              ),
+              if (provider.isLoading)
+                Container(
+                  height: 280,
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator(color: theme.colorScheme.primary),
+                )
+              else if (provider.randomPackages.isEmpty)
+                Container(
+                  height: 280,
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(CupertinoIcons.cube_box, size: 48, color: theme.colorScheme.onSurfaceVariant),
+                      const SizedBox(height: 12),
+                      Text('No packages available', style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                    ],
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 280,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: provider.randomPackages.length,
+                    itemBuilder: (context, index) {
+                      final package = provider.randomPackages[index];
+                      return Padding(
+                        padding: EdgeInsets.only(right: index < provider.randomPackages.length - 1 ? 16 : 0),
+                        child: _buildPackageCard(theme, package),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildAllHotelsSection(ThemeData theme) {
+    return SliverToBoxAdapter(
+      child: Consumer<UserHotelsProvider>(
+        builder: (context, provider, _) {
+          final total = provider.totalHotels;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '$total Hotels',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => context.push('/hotels'),
+                      label: Text(
+                        'See all',
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      icon: Icon(
+                        CupertinoIcons.arrow_right,
+                        size: 16,
+                        color: theme.colorScheme.primary,
+                      ),
+                      iconAlignment: IconAlignment.end,
+                    ),
+                  ],
+                ),
+              ),
+              if (provider.isLoading)
+                Container(
+                  height: 240,
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator(color: theme.colorScheme.primary),
+                )
+              else if (provider.randomHotels.isEmpty)
+                Container(
+                  height: 240,
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(CupertinoIcons.building_2_fill, size: 48, color: theme.colorScheme.onSurfaceVariant),
+                      const SizedBox(height: 12),
+                      Text('No hotels available', style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                    ],
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 240,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: provider.randomHotels.length,
+                    itemBuilder: (context, index) {
+                      final hotel = provider.randomHotels[index];
+                      return Padding(
+                        padding: EdgeInsets.only(right: index < provider.randomHotels.length - 1 ? 16 : 0),
+                        child: _buildHotelCard(theme, hotel),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildRecentlyAddedPlacesSection(ThemeData theme) {
     return SliverToBoxAdapter(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -337,7 +503,169 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Top Hotels',
+                  'Recently Added Places',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => context.push('/places'),
+                  label: Text(
+                    'See all',
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  icon: Icon(
+                    CupertinoIcons.arrow_right,
+                    size: 16,
+                    color: theme.colorScheme.primary,
+                  ),
+                  iconAlignment: IconAlignment.end,
+                ),
+              ],
+            ),
+          ),
+          Consumer<PlacesProvider>(
+            builder: (context, provider, _) {
+              if (provider.isLoading) {
+                return Container(
+                  height: 200,
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator(color: theme.colorScheme.primary),
+                );
+              }
+              final places = provider.latestPlaces;
+              if (places.isEmpty) {
+                return Container(
+                  height: 200,
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(CupertinoIcons.map, size: 48, color: theme.colorScheme.onSurfaceVariant),
+                      const SizedBox(height: 12),
+                      Text('No places available', style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                    ],
+                  ),
+                );
+              }
+              return SizedBox(
+                height: 200,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: places.length,
+                  itemBuilder: (context, index) {
+                    final place = places[index];
+                    return Padding(
+                      padding: EdgeInsets.only(right: index < places.length - 1 ? 16 : 0),
+                      child: _buildPlaceCard(theme, place),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentlyAddedPackagesSection(ThemeData theme) {
+    return SliverToBoxAdapter(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Recently Added Packages',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => context.push('/packages'),
+                  label: Text(
+                    'See all',
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  icon: Icon(
+                    CupertinoIcons.arrow_right,
+                    size: 16,
+                    color: theme.colorScheme.primary,
+                  ),
+                  iconAlignment: IconAlignment.end,
+                ),
+              ],
+            ),
+          ),
+          Consumer<UserHomeProvider>(
+            builder: (context, provider, _) {
+              if (provider.isLoading) {
+                return Container(
+                  height: 280,
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator(color: theme.colorScheme.primary),
+                );
+              }
+              final packages = provider.recentlyAddedPackages;
+              if (packages.isEmpty) {
+                return Container(
+                  height: 280,
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(CupertinoIcons.cube_box, size: 48, color: theme.colorScheme.onSurfaceVariant),
+                      const SizedBox(height: 12),
+                      Text('No packages available', style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                    ],
+                  ),
+                );
+              }
+              return SizedBox(
+                height: 280,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: packages.length,
+                  itemBuilder: (context, index) {
+                    final package = packages[index];
+                    return Padding(
+                      padding: EdgeInsets.only(right: index < packages.length - 1 ? 16 : 0),
+                      child: _buildPackageCard(theme, package),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentlyAddedHotelsSection(ThemeData theme) {
+    return SliverToBoxAdapter(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Recently Added Hotels',
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -370,7 +698,8 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   child: CircularProgressIndicator(color: theme.colorScheme.primary),
                 );
               }
-              if (provider.latestHotels.isEmpty) {
+              final hotels = provider.recentlyAddedHotels;
+              if (hotels.isEmpty) {
                 return Container(
                   height: 240,
                   alignment: Alignment.center,
@@ -389,11 +718,11 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: provider.latestHotels.length,
+                  itemCount: hotels.length,
                   itemBuilder: (context, index) {
-                    final hotel = provider.latestHotels[index];
+                    final hotel = hotels[index];
                     return Padding(
-                      padding: EdgeInsets.only(right: index < provider.latestHotels.length - 1 ? 16 : 0),
+                      padding: EdgeInsets.only(right: index < hotels.length - 1 ? 16 : 0),
                       child: _buildHotelCard(theme, hotel),
                     );
                   },

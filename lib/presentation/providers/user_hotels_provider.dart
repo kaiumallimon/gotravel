@@ -26,11 +26,21 @@ class UserHotelsProvider with ChangeNotifier {
     return _allHotels.take(5).toList();
   }
   
+  // Get recently added hotels (same as latest hotels)
+  List<Hotel> get recentlyAddedHotels => latestHotels;
+  
   // Get featured hotels (top 5 rated)
   List<Hotel> get featuredHotels {
     final sorted = List<Hotel>.from(_allHotels);
     sorted.sort((a, b) => b.rating.compareTo(a.rating));
     return sorted.take(5).toList();
+  }
+  
+  // Get random hotels (limit 5)
+  List<Hotel> get randomHotels {
+    if (_allHotels.isEmpty) return [];
+    final shuffled = List<Hotel>.from(_allHotels)..shuffle();
+    return shuffled.take(5).toList();
   }
   
   // Get total hotels count

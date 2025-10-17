@@ -33,6 +33,23 @@ class UserHomeProvider extends ChangeNotifier {
   Map<String, int>? get stats => _stats;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  
+  // Get random featured packages (limit 5)
+  List<TourPackage> get featuredPackages {
+    if (_recommendedPackages.isEmpty) return [];
+    final shuffled = List<TourPackage>.from(_recommendedPackages)..shuffle();
+    return shuffled.take(5).toList();
+  }
+  
+  // Get random packages from all packages (limit 5)
+  List<TourPackage> get randomPackages {
+    if (_allPackages.isEmpty) return [];
+    final shuffled = List<TourPackage>.from(_allPackages)..shuffle();
+    return shuffled.take(5).toList();
+  }
+  
+  // Get recently added packages (limit 5)
+  List<TourPackage> get recentlyAddedPackages => _latestPackages;
 
   Future<void> loadHomeData(BuildContext context) async {
     _isLoading = true;
