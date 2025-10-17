@@ -30,8 +30,8 @@ class _UserPackagesPageState extends State<UserPackagesPage> {
         backgroundColor: theme.colorScheme.surface,
         elevation: 0,
         title: Text(
-          'Travel Packages',
-          style: theme.textTheme.titleLarge?.copyWith(
+          'Packages',
+          style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -57,7 +57,7 @@ class _UserPackagesPageState extends State<UserPackagesPage> {
                   ),
                   child: TextField(
                     onChanged: (value) {
-                      // TODO: Implement search
+                      provider.setSearchQuery(value);
                     },
                     decoration: InputDecoration(
                       hintText: 'Search packages...',
@@ -78,26 +78,73 @@ class _UserPackagesPageState extends State<UserPackagesPage> {
                 ),
               ),
               
-              // Filter buttons
+              // Result count and Sort button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      child: _buildFilterButton(
-                        'All',
-                        provider.selectedCategory == 'All',
-                        () => provider.setCategoryFilter('All'),
-                        theme,
+                    Text(
+                      'Result found (${provider.filteredPackagesCount})',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildFilterButton(
-                        'All',
-                        provider.selectedCountry == 'All',
-                        () => provider.setCountryFilter('All'),
-                        theme,
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        provider.setSortBy(value);
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'latest',
+                          child: Text('Latest'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'name',
+                          child: Text('Name (A-Z)'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'price-low',
+                          child: Text('Price (Low to High)'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'price-high',
+                          child: Text('Price (High to Low)'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'rating',
+                          child: Text('Rating'),
+                        ),
+                      ],
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: theme.colorScheme.outline.withOpacity(0.2),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              CupertinoIcons.sort_down,
+                              size: 16,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Sort By',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -149,48 +196,13 @@ class _UserPackagesPageState extends State<UserPackagesPage> {
     );
   }
 
-  Widget _buildFilterButton(
-    String label,
-    bool isSelected,
-    VoidCallback onTap,
-    ThemeData theme,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? theme.colorScheme.primary
-              : theme.colorScheme.surfaceVariant.withOpacity(0.3),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isSelected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.outline.withOpacity(0.2),
-          ),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: isSelected
-                  ? Colors.white
-                  : theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildPackageCard(dynamic package, ThemeData theme) {
     return GestureDetector(
       onTap: () {
         context.push('/package-details/${package.id}');
       },
       child: Container(
+        height: 200,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
@@ -251,6 +263,7 @@ class _UserPackagesPageState extends State<UserPackagesPage> {
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
+                      fontSize: 10,
                     ),
                   ),
                 ),
@@ -292,127 +305,48 @@ class _UserPackagesPageState extends State<UserPackagesPage> {
               
               // Package info
               Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Package title
-                      Text(
-                        package.name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                bottom: 16,
+                left: 16,
+                right: 16,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Package title
+                    Text(
+                      package.name,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    
+                    const SizedBox(height: 4),
+                    
+                    // Location
+                    Row(
+                      children: [
+                        Icon(
+                          CupertinoIcons.location_solid,
+                          color: Colors.white.withOpacity(0.8),
+                          size: 14,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      
-                      const SizedBox(height: 4),
-                      
-                      // Location
-                      Row(
-                        children: [
-                          Icon(
-                            CupertinoIcons.location_solid,
-                            color: Colors.white.withOpacity(0.8),
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              '${package.destination}, ${package.country}',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: Colors.white.withOpacity(0.8),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 8),
-                      
-                      // Duration and price
-                      Row(
-                        children: [
-                          Icon(
-                            CupertinoIcons.calendar,
-                            color: Colors.white.withOpacity(0.8),
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${package.durationDays} days',
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            '${package.destination}, ${package.country}',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: Colors.white.withOpacity(0.8),
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(width: 16),
-                          Icon(
-                            CupertinoIcons.person_2,
-                            color: Colors.white.withOpacity(0.8),
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${package.availableSlots}/${package.maxParticipants} slots',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.white.withOpacity(0.8),
-                            ),
-                          ),
-                        ],
-                      ),
-                      
-                      const SizedBox(height: 8),
-                      
-                      // Price and View Details
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Starting from',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: Colors.white.withOpacity(0.8),
-                                ),
-                              ),
-                              Text(
-                                '${package.currency}${package.price.toStringAsFixed(0)}',
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              'View Details',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],

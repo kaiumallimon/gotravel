@@ -194,41 +194,14 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Package counter (all) + See all
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${provider.totalPackages} Packages',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      context.push('/packages');
-                    },
-                    child: Text(
-                      'See all',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
 
               // Latest Packages (latest 5)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Latest Packages',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+                    '${provider.totalPackages} Packages',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     ),
                   ),
                   TextButton(
@@ -246,7 +219,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
                 ],
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
 
               if (provider.isLoading)
                 const Center(child: CircularProgressIndicator())
@@ -254,7 +227,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
                 Center(
                   child: Text(
                     'No packages available',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -285,7 +258,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
                 children: [
                   Text(
                     'Featured',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -874,13 +847,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> with TickerProvid
                     const SizedBox(height: 8),
                     
                     // Price
-                    Text(
-                      '${package.currency}${package.price.toStringAsFixed(0)}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    
                   ],
                 ),
               ),
