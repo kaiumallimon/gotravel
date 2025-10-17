@@ -1,9 +1,55 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:gotravel/presentation/providers/booking_provider.dart';
+import 'package:provider/provider.dart';
 
-class PaymentSuccessPage extends StatelessWidget {
+class PaymentSuccessPage extends StatefulWidget {
   const PaymentSuccessPage({super.key});
+
+  @override
+  State<PaymentSuccessPage> createState() => _PaymentSuccessPageState();
+}
+
+class _PaymentSuccessPageState extends State<PaymentSuccessPage> {
+  bool _isExecuting = true;
+  bool _success = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _executePayment();
+  }
+
+  Future<void> _executePayment() async {
+    // Get payment info from route extra
+    final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
+    
+    if (extra == null) {
+      setState(() {
+        _isExecuting = false;
+        _errorMessage = 'Payment information not found';
+      });
+      return;
+    }
+
+    final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+    
+    final success = await bookingProvider.executePayment(
+      paymentId: extra['paymentID'],
+      idToken: extra['idToken'],
+      bookingId: extra['bookingId'],
+    );
+
+    setState(() {
+      _isExecuting = false;
+      _success = success;
+      if (!success && bookingProvider.error != null) {
+        _errorMessage = bookingProvider.error;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

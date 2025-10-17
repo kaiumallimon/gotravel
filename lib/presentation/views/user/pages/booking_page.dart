@@ -457,7 +457,7 @@ class _BookingPageState extends State<BookingPage> {
       // Use the new createPackageBooking with bKash integration
       final result = await bookingProvider.createPackageBooking(
         packageId: widget.packageId,
-        packageDateId: widget.packageId, // Using package ID as date ID for now (adjust based on your date selection logic)
+        // packageDateId: null - not using package_dates table for now
         primaryGuestName: nameController.text,
         primaryGuestEmail: emailController.text,
         primaryGuestPhone: phoneController.text,
@@ -482,19 +482,13 @@ class _BookingPageState extends State<BookingPage> {
       }
       
       if (context.mounted) {
-        // Show success message that payment window opened
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Booking created! Complete payment in bKash to confirm.'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-        
-        // Navigate back or to My Trips page
-        // User will need to manually execute payment after returning from bKash
-        // You can implement deep linking to handle automatic payment confirmation
-        context.go('/my-trips');
+        // Navigate to bKash WebView payment page
+        context.push('/bkash-payment', extra: {
+          'paymentUrl': result['bkashURL'],
+          'paymentID': result['paymentID'],
+          'idToken': result['idToken'],
+          'bookingId': result['booking'].id,
+        });
       }
     } catch (e) {
       if (context.mounted) {

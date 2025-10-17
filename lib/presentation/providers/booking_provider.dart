@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:gotravel/data/models/booking_model.dart';
 import 'package:gotravel/data/services/remote/booking_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class BookingProvider with ChangeNotifier {
   final BookingService _bookingService = BookingService();
@@ -555,7 +554,7 @@ class BookingProvider with ChangeNotifier {
   /// Create package booking with bKash payment
   Future<Map<String, dynamic>?> createPackageBooking({
     required String packageId,
-    required String packageDateId,
+    String? packageDateId, // Optional - only if booking specific package date
     required String primaryGuestName,
     required String primaryGuestEmail,
     required String primaryGuestPhone,
@@ -590,7 +589,7 @@ class BookingProvider with ChangeNotifier {
         additionalData: {
           'departure_date': departureDate.toIso8601String(),
           if (returnDate != null) 'return_date': returnDate.toIso8601String(),
-          'package_date_id': packageDateId,
+          if (packageDateId != null) 'package_date_id': packageDateId, // Only include if provided
           if (guestDetails != null) 'guest_details': guestDetails.map((g) => g.toMap()).toList(),
           if (specialRequests != null) 'special_requests': specialRequests,
           if (dietaryRequirements != null) 'dietary_requirements': dietaryRequirements,
@@ -606,17 +605,8 @@ class BookingProvider with ChangeNotifier {
       _currentBooking = result['booking'];
       notifyListeners();
       
-      // Launch bKash URL
-      final bkashURL = result['bkashURL'];
-      final uri = Uri.parse(bkashURL);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        _setError('Could not launch payment page');
-        return null;
-      }
-      
       _setLoading(false);
+      // Return result - caller will navigate to WebView
       return result;
     } catch (e) {
       _setError(e.toString());
@@ -679,17 +669,8 @@ class BookingProvider with ChangeNotifier {
       _currentBooking = result['booking'];
       notifyListeners();
       
-      // Launch bKash URL
-      final bkashURL = result['bkashURL'];
-      final uri = Uri.parse(bkashURL);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        _setError('Could not launch payment page');
-        return null;
-      }
-      
       _setLoading(false);
+      // Return result - caller will navigate to WebView
       return result;
     } catch (e) {
       _setError(e.toString());

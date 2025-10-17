@@ -68,7 +68,7 @@ class BkashRepository {
         jsonEncode({
           "mode": "0011",
           "payerReference": "nothing",
-          "callbackURL": "https://paymentcallback.netlify.app/",
+          "callbackURL": "https://callback-bkash.netlify.app/",
           "amount": amount,
           "currency": "BDT",
           "intent": "sale",

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gotravel/data/models/booking_model.dart';
 import 'package:gotravel/presentation/providers/booking_provider.dart';
 import 'package:provider/provider.dart';
@@ -73,7 +74,7 @@ class _MyTripsPageState extends State<MyTripsPage> with SingleTickerProviderStat
         elevation: 0,
         leading: IconButton(
           icon: Icon(CupertinoIcons.back, color: theme.colorScheme.onSurface),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.go('/user-home'),
         ),
         title: Text(
           'My Trips',

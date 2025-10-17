@@ -66,6 +66,10 @@ class BookingService {
         'primary_guest_email': primaryGuestEmail,
         'primary_guest_phone': primaryGuestPhone,
         'total_participants': totalParticipants,
+        'base_price': totalAmountUSD, // Base price (required field)
+        'additional_costs': 0.0,
+        'discount_amount': 0.0,
+        'tax_amount': 0.0,
         'total_amount': totalAmountUSD,
         'currency': 'USD',
         'booking_status': 'pending',
