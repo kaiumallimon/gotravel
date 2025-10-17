@@ -82,13 +82,29 @@ class _BkashWebviewPaymentPageState extends State<BkashWebviewPaymentPage> {
       return;
     }
     
-    // Check if URL contains status parameter
+    // Convert URL to lowercase for case-insensitive matching
+    final urlLower = url.toLowerCase();
+    
+    // Check if URL contains status parameter (e.g., ?status=success)
     final uri = Uri.parse(url);
     final status = uri.queryParameters['status'];
     
     if (status != null) {
-      debugPrint('💳 Payment callback detected with status: $status');
+      debugPrint('💳 Payment callback detected with status parameter: $status');
       _handlePaymentCallback(status);
+      return;
+    }
+    
+    // Also check if URL ends with success/failure/cancel pages
+    if (urlLower.contains('success.html') || urlLower.contains('/success')) {
+      debugPrint('💳 Payment callback detected: Success page loaded');
+      _handlePaymentCallback('success');
+    } else if (urlLower.contains('failure.html') || urlLower.contains('/failure')) {
+      debugPrint('💳 Payment callback detected: Failure page loaded');
+      _handlePaymentCallback('failure');
+    } else if (urlLower.contains('cancel') || urlLower.contains('cancelled.html')) {
+      debugPrint('💳 Payment callback detected: Cancel page loaded');
+      _handlePaymentCallback('cancel');
     }
   }
 
@@ -103,24 +119,41 @@ class _BkashWebviewPaymentPageState extends State<BkashWebviewPaymentPage> {
       final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
       
       if (status == 'success') {
-        debugPrint('✅ Payment successful! Executing payment...');
+        debugPrint('✅ Payment successful! Auto-closing WebView and executing payment...');
         
-        // Show processing dialog
+        // Show processing dialog (this also visually hides the WebView)
         if (mounted) {
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (context) => const Center(
-              child: Card(
-                child: Padding(
-                  padding: EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text('Processing payment...'),
-                    ],
+            builder: (context) => PopScope(
+              canPop: false, // Prevent back button during processing
+              child: const Center(
+                child: Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text(
+                          'Processing payment...',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          'Please wait',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -129,6 +162,7 @@ class _BkashWebviewPaymentPageState extends State<BkashWebviewPaymentPage> {
         }
         
         // Execute the payment on backend
+        debugPrint('📡 Calling executePayment API...');
         final success = await bookingProvider.executePayment(
           bookingId: widget.bookingId,
           paymentId: widget.paymentId,
@@ -140,46 +174,65 @@ class _BkashWebviewPaymentPageState extends State<BkashWebviewPaymentPage> {
           Navigator.of(context).pop();
           
           if (success) {
+            debugPrint('✅ Payment executed successfully! Updating bookings...');
+            
             // Reload bookings to get updated data
             await bookingProvider.loadBookings();
             
-            // Navigate to My Trips
+            debugPrint('✅ Bookings reloaded. Closing WebView and navigating to My Trips...');
+            
+            // Close the WebView page and navigate to My Trips
             context.go('/my-trips');
             
-            // Show success snackbar
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Row(
-                  children: [
-                    Icon(Icons.check_circle, color: Colors.white),
-                    SizedBox(width: 8),
-                    Text('Payment successful! Your booking is confirmed.'),
-                  ],
-                ),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 5),
-              ),
-            );
+            // Show success snackbar after navigation
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.white),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text('Payment successful! Your booking is confirmed.'),
+                        ),
+                      ],
+                    ),
+                    backgroundColor: Colors.green,
+                    duration: Duration(seconds: 5),
+                  ),
+                );
+              }
+            });
           } else {
             // Show error
-            _showErrorDialog('Payment execution failed. Please contact support.');
+            debugPrint('❌ Payment execution failed!');
+            _showErrorDialog('Payment execution failed. Please contact support with your booking reference.');
           }
         }
       } else if (status == 'failure') {
-        debugPrint('❌ Payment failed!');
+        debugPrint('❌ Payment failed! Auto-closing WebView...');
         if (mounted) {
-          _showErrorDialog('Payment failed. Please try again.');
+          // Small delay to let user see the failure page briefly
+          await Future.delayed(const Duration(milliseconds: 500));
+          _showErrorDialog('Payment failed. Please try again or use a different payment method.');
         }
       } else if (status == 'cancel') {
-        debugPrint('🚫 Payment cancelled by user');
+        debugPrint('🚫 Payment cancelled by user! Auto-closing WebView...');
         if (mounted) {
+          // Small delay to let user see the cancel page briefly
+          await Future.delayed(const Duration(milliseconds: 500));
           _showCancelDialog();
         }
       }
     } catch (e) {
       debugPrint('💥 Error handling payment callback: $e');
       if (mounted) {
-        _showErrorDialog('An error occurred while processing your payment.');
+        // Close processing dialog if open
+        if (Navigator.canPop(context)) {
+          Navigator.of(context).pop();
+        }
+        _showErrorDialog('An error occurred while processing your payment. Please check your bookings or contact support.');
       }
     } finally {
       if (mounted) {
