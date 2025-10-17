@@ -5,6 +5,7 @@ import 'package:gotravel/core/routes/app_routes.dart';
 import 'package:gotravel/data/models/hotel_model.dart';
 import 'package:gotravel/data/models/room_model.dart';
 import 'package:gotravel/presentation/providers/admin_hotels_provider.dart';
+import 'package:gotravel/presentation/views/admin/hotels/pages/detailed_hotel_page.dart';
 import 'package:gotravel/presentation/widgets/custom_text_field.dart';
 import 'package:provider/provider.dart';
 
@@ -307,10 +308,7 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: () {
-            context.push(
-              '/admin/detailed-hotel',
-              extra: hotel.toMap(),
-            );
+            _showHotelDetails(context, hotel);
           },
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -602,6 +600,26 @@ class _AdminHotelsPageState extends State<AdminHotelsPage> {
             child: const Text('Delete'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showHotelDetails(BuildContext context, Hotel hotel) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        maxChildSize: 0.95,
+        minChildSize: 0.5,
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: DetailedHotelPage(hotel: hotel),
+        ),
       ),
     );
   }

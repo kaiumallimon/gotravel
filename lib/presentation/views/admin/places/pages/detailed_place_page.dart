@@ -19,37 +19,6 @@ class DetailedPlacePage extends StatelessWidget {
     );
   }
 
-  void _editPlace(BuildContext context) {
-    Navigator.of(context).pushNamed(
-      '/admin/places/add',
-      arguments: place,
-    );
-  }
-
-  void _deletePlace(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Delete Place'),
-        content: Text('Are you sure you want to delete "${place.name}"? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Close dialog
-              Navigator.of(context).pop(true); // Return to places list with delete signal
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text('Delete'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -61,18 +30,6 @@ class DetailedPlacePage extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(),
           icon: Icon(CupertinoIcons.xmark),
         ),
-        actions: [
-          IconButton(
-            onPressed: () => _editPlace(context),
-            icon: Icon(CupertinoIcons.pencil),
-            tooltip: 'Edit Place',
-          ),
-          IconButton(
-            onPressed: () => _deletePlace(context),
-            icon: Icon(CupertinoIcons.delete),
-            tooltip: 'Delete Place',
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

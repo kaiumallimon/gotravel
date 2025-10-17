@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gotravel/data/models/tour_package_model.dart';
 import 'package:gotravel/presentation/providers/admin_packages_provider.dart';
+import 'package:gotravel/presentation/views/admin/packages/pages/detailed_package_page.dart';
 import 'package:gotravel/presentation/widgets/custom_text_field.dart';
 import 'package:provider/provider.dart';
 
@@ -300,10 +301,7 @@ class _AdminPackagesPageState extends State<AdminPackagesPage> {
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: () {
-            context.push(
-              '/admin/detailed-package',
-              extra: package,
-            );
+            _showPackageDetails(context, package);
           },
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -634,6 +632,26 @@ class _AdminPackagesPageState extends State<AdminPackagesPage> {
             child: const Text('Delete'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showPackageDetails(BuildContext context, TourPackage package) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        maxChildSize: 0.95,
+        minChildSize: 0.5,
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: DetailedPackagePage(package: package),
+        ),
       ),
     );
   }
