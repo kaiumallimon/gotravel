@@ -62,19 +62,47 @@ class _UserWrapperState extends State<UserWrapper> {
         index: _currentIndex,
         children: _pages,
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        destinations: _navigationDestinations,
-        elevation: 8,
-        backgroundColor: theme.colorScheme.surface,
-        indicatorColor: theme.colorScheme.primaryContainer,
-        surfaceTintColor: theme.colorScheme.surfaceTint,
-        animationDuration: const Duration(milliseconds: 300),
+      bottomNavigationBar: Theme(
+        data: theme.copyWith(
+          navigationBarTheme: NavigationBarThemeData(
+            backgroundColor: Colors.white,
+            indicatorColor: theme.colorScheme.primary.withOpacity(0.1),
+            iconTheme: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return IconThemeData(color: theme.colorScheme.primary);
+              }
+              return IconThemeData(color: theme.colorScheme.onSurfaceVariant);
+            }),
+            labelTextStyle: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return TextStyle(
+                  color: theme.colorScheme.primary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                );
+              }
+              return TextStyle(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              );
+            }),
+          ),
+        ),
+        child: NavigationBar(
+          
+          selectedIndex: _currentIndex,
+          onDestinationSelected: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          destinations: _navigationDestinations,
+          elevation: 8,
+          surfaceTintColor: Colors.transparent,
+          animationDuration: const Duration(milliseconds: 300),
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        ),
       ),
     );
   }
