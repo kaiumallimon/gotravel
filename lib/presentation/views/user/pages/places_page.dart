@@ -16,14 +16,40 @@ class PlacesPage extends StatefulWidget {
 }
 
 class _PlacesPageState extends State<PlacesPage> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+  
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategory = 'All';
+  String _selectedFilterTab = 'All';
+  final List<String> _filterTabs = ['All', 'Featured', 'Popular'];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    
+    // Initialize animations
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+    
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutCubic,
+    ));
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final placesProvider = Provider.of<PlacesProvider>(context, listen: false);
@@ -31,12 +57,13 @@ class _PlacesPageState extends State<PlacesPage> with SingleTickerProviderStateM
       
       placesProvider.initialize();
       favoritesProvider.initialize();
+      _animationController.forward();
     });
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
+    _animationController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -104,26 +131,19 @@ class _PlacesPageState extends State<PlacesPage> with SingleTickerProviderStateM
           ),
           const SizedBox(height: 16),
           
-          // Search bar
-          CustomSearchBar(
-            controller: _searchController,
-            hintText: 'Search places...',
-            onChanged: (query) {
-              final placesProvider = Provider.of<PlacesProvider>(context, listen: false);
-              if (query.isEmpty) {
-                placesProvider.loadPlaces();
-              } else {
-                placesProvider.searchPlaces(query);
-              }
-            },
-            onSubmitted: (query) {
-              final placesProvider = Provider.of<PlacesProvider>(context, listen: false);
-              if (query.isEmpty) {
-                placesProvider.loadPlaces();
-              } else {
-                placesProvider.searchPlaces(query);
-              }
-            },
+          // Dynamic Search bar
+          FadeTransition(
+            opacity: _fadeAnimation,
+            child: CustomSearchBar(
+              controller: _searchController,
+              hintText: 'Search ${_selectedCategory.toLowerCase() == 'all' ? '' : '${_selectedCategory.toLowerCase()} '}places...',
+              onChanged: (query) {
+                _performDynamicSearch(query);
+              },
+              onSubmitted: (query) {
+                _performDynamicSearch(query);
+              },
+            ),
           ),
         ],
       ),
@@ -131,44 +151,163 @@ class _PlacesPageState extends State<PlacesPage> with SingleTickerProviderStateM
   }
 
   Widget _buildFilterTabs(ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: TabBar(
-        controller: _tabController,
-        isScrollable: true,
-        indicatorColor: theme.colorScheme.primary,
-        labelColor: theme.colorScheme.primary,
-        unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
-        labelStyle: theme.textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w600,
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Filter Tabs Row
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: _filterTabs.map((tab) {
+                    final isSelected = _selectedFilterTab == tab;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        child: FilterChip(
+                          label: Text(
+                            tab,
+                            style: TextStyle(
+                              color: isSelected 
+                                ? theme.colorScheme.onPrimary
+                                : theme.colorScheme.onSurfaceVariant,
+                              fontWeight: isSelected 
+                                ? FontWeight.w600 
+                                : FontWeight.w500,
+                            ),
+                          ),
+                          selected: isSelected,
+                          selectedColor: theme.colorScheme.primary,
+                          backgroundColor: theme.colorScheme.surfaceVariant,
+                          checkmarkColor: theme.colorScheme.onPrimary,
+                          elevation: isSelected ? 4 : 0,
+                          shadowColor: theme.colorScheme.primary.withOpacity(0.3),
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() {
+                                _selectedFilterTab = tab;
+                                _selectedCategory = 'All'; // Reset category when switching filter tabs
+                              });
+                              _handleFilterTabSelection(tab);
+                            }
+                          },
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Categories Row
+              Consumer<PlacesProvider>(
+                builder: (context, placesProvider, child) {
+                  final allCategories = ['All', ...placesProvider.categories];
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: allCategories.map((category) {
+                        final isSelected = _selectedCategory == category;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            curve: Curves.easeInOut,
+                            child: ActionChip(
+                              label: Text(
+                                category,
+                                style: TextStyle(
+                                  color: isSelected 
+                                    ? theme.colorScheme.onSecondaryContainer
+                                    : theme.colorScheme.onSurface,
+                                  fontSize: 13,
+                                  fontWeight: isSelected 
+                                    ? FontWeight.w600 
+                                    : FontWeight.w400,
+                                ),
+                              ),
+                              backgroundColor: isSelected 
+                                ? theme.colorScheme.secondaryContainer
+                                : theme.colorScheme.surface,
+                              side: BorderSide(
+                                color: isSelected 
+                                  ? theme.colorScheme.secondary
+                                  : theme.colorScheme.outline.withOpacity(0.5),
+                                width: isSelected ? 2 : 1,
+                              ),
+                              elevation: isSelected ? 2 : 0,
+                              shadowColor: theme.colorScheme.secondary.withOpacity(0.2),
+                              onPressed: () {
+                                setState(() {
+                                  _selectedCategory = category;
+                                });
+                                _handleCategorySelection(category);
+                              },
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
-        unselectedLabelStyle: theme.textTheme.titleSmall,
-        tabs: const [
-          Tab(text: 'All'),
-          Tab(text: 'Featured'),
-          Tab(text: 'Popular'),
-          Tab(text: 'Categories'),
-        ],
-        onTap: (index) {
-          final placesProvider = Provider.of<PlacesProvider>(context, listen: false);
-          
-          switch (index) {
-            case 0:
-              placesProvider.loadPlaces();
-              break;
-            case 1:
-              placesProvider.loadFeaturedPlaces();
-              break;
-            case 2:
-              placesProvider.loadPopularPlaces();
-              break;
-            case 3:
-              _showCategoryFilter();
-              break;
-          }
-        },
       ),
     );
+  }
+
+  void _handleFilterTabSelection(String tab) {
+    final placesProvider = Provider.of<PlacesProvider>(context, listen: false);
+    
+    switch (tab) {
+      case 'All':
+        placesProvider.loadPlaces();
+        break;
+      case 'Featured':
+        placesProvider.loadFeaturedPlaces();
+        break;
+      case 'Popular':
+        placesProvider.loadPopularPlaces();
+        break;
+    }
+  }
+
+  void _handleCategorySelection(String category) {
+    final placesProvider = Provider.of<PlacesProvider>(context, listen: false);
+    
+    if (category == 'All') {
+      // Apply the current filter tab selection instead of just loading all places
+      _handleFilterTabSelection(_selectedFilterTab);
+    } else {
+      placesProvider.loadPlacesByCategory(category);
+    }
+    
+    // Clear search when changing category
+    _searchController.clear();
+  }
+
+  void _performDynamicSearch(String query) {
+    final placesProvider = Provider.of<PlacesProvider>(context, listen: false);
+    
+    if (query.isEmpty) {
+      // Restore current filter based on selections
+      if (_selectedCategory == 'All') {
+        _handleFilterTabSelection(_selectedFilterTab);
+      } else {
+        _handleCategorySelection(_selectedCategory);
+      }
+    } else {
+      // Perform search - the filtering by category will be handled in the UI
+      placesProvider.searchPlaces(query);
+    }
   }
 
   Widget _buildPlacesContent(ThemeData theme) {
@@ -261,7 +400,24 @@ class _PlacesPageState extends State<PlacesPage> with SingleTickerProviderStateM
                 itemId: place.id,
               );
 
-              return PlaceCard(
+              return AnimatedContainer(
+                duration: Duration(milliseconds: 300 + (index * 50)),
+                curve: Curves.easeOutCubic,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.5),
+                      end: Offset.zero,
+                    ).animate(CurvedAnimation(
+                      parent: _animationController,
+                      curve: Interval(
+                        (index * 0.1).clamp(0.0, 1.0),
+                        ((index * 0.1) + 0.3).clamp(0.0, 1.0),
+                        curve: Curves.easeOutCubic,
+                      ),
+                    )),
+                    child: PlaceCard(
                 place: place,
                 isFavorite: isFavorite,
                 width: double.infinity,
@@ -289,6 +445,9 @@ class _PlacesPageState extends State<PlacesPage> with SingleTickerProviderStateM
                     );
                   }
                 },
+                    ),
+                  ),
+                ),
               );
             },
           ),
@@ -298,61 +457,35 @@ class _PlacesPageState extends State<PlacesPage> with SingleTickerProviderStateM
   }
 
   List<PlaceModel> _getPlacesToShow(PlacesProvider provider) {
-    switch (_tabController.index) {
-      case 1:
-        return provider.featuredPlaces;
-      case 2:
-        return provider.popularPlaces;
-      default:
-        return provider.places;
-    }
-  }
-
-  void _showCategoryFilter() {
-    final placesProvider = Provider.of<PlacesProvider>(context, listen: false);
+    List<PlaceModel> basePlaces;
     
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Filter by Category',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: ['All', ...placesProvider.categories].map((category) {
-                final isSelected = _selectedCategory == category;
-                return FilterChip(
-                  label: Text(category),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    setState(() {
-                      _selectedCategory = category;
-                    });
-                    
-                    if (category == 'All') {
-                      placesProvider.loadPlaces();
-                    } else {
-                      placesProvider.loadPlacesByCategory(category);
-                    }
-                    
-                    Navigator.pop(context);
-                  },
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
+    // Get base places based on filter tab
+    switch (_selectedFilterTab) {
+      case 'Featured':
+        basePlaces = provider.featuredPlaces;
+        break;
+      case 'Popular':
+        basePlaces = provider.popularPlaces;
+        break;
+      default:
+        basePlaces = provider.places;
+        break;
+    }
+    
+    // Apply category filter if not 'All' and not in search mode
+    if (_selectedCategory != 'All' && _searchController.text.isEmpty) {
+      return basePlaces.where((place) => 
+        place.category?.toLowerCase() == _selectedCategory.toLowerCase()
+      ).toList();
+    }
+    
+    // Apply category filter to search results if searching within a category
+    if (_selectedCategory != 'All' && _searchController.text.isNotEmpty) {
+      return basePlaces.where((place) => 
+        place.category?.toLowerCase() == _selectedCategory.toLowerCase()
+      ).toList();
+    }
+    
+    return basePlaces;
   }
 }

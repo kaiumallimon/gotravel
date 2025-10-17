@@ -1,7 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:quickalert/models/quickalert_type.dart';
+import 'package:quickalert/widgets/quickalert_dialog.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:gotravel/presentation/providers/sign_in_provider.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
@@ -179,7 +182,21 @@ class MorePage extends StatelessWidget {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () async {
-                    await _showLogoutConfirmation(context);
+                    QuickAlert.show(
+                      context: context,
+                      type: QuickAlertType.confirm,
+                      title: "Sign Out",
+                      text: "Are you sure you want to sign out?",
+                      confirmBtnText: "Yes",
+                      cancelBtnText: "No",
+                      onConfirmBtnTap: () {
+                        Navigator.of(context).pop();
+                        Provider.of<SignInProvider>(
+                          context,
+                          listen: false,
+                        ).signOut(context);
+                      },
+                    );
                   },
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -313,46 +330,5 @@ class MorePage extends StatelessWidget {
     );
   }
 
-  Future<void> _showLogoutConfirmation(BuildContext context) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Logout'),
-          content: const Text('Are you sure you want to logout?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text(
-                'Logout',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
-        );
-      },
-    );
 
-    if (result == true && context.mounted) {
-      try {
-        await Supabase.instance.client.auth.signOut();
-        if (context.mounted) {
-          context.go('/welcome');
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error logging out: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
-  }
 }
