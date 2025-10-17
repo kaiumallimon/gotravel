@@ -5,6 +5,8 @@ import 'package:quickalert/models/quickalert_type.dart';
 import 'package:quickalert/widgets/quickalert_dialog.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:gotravel/presentation/providers/sign_in_provider.dart';
+import 'package:gotravel/presentation/views/user/pages/edit_profile_page.dart';
+import 'package:gotravel/presentation/views/user/pages/saved_items_page.dart';
 
 class MorePage extends StatelessWidget {
   const MorePage({super.key});
@@ -96,7 +98,11 @@ class MorePage extends StatelessWidget {
                   title: 'Edit Profile',
                   subtitle: 'Update your personal information',
                   onTap: () {
-                    // TODO: Navigate to edit profile
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const EditProfilePage(),
+                      ),
+                    );
                   },
                   theme: theme,
                 ),
@@ -105,7 +111,11 @@ class MorePage extends StatelessWidget {
                   title: 'Saved Items',
                   subtitle: 'Your favorite places and packages',
                   onTap: () {
-                    // TODO: Navigate to favorites
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const SavedItemsPage(),
+                      ),
+                    );
                   },
                   theme: theme,
                 ),
