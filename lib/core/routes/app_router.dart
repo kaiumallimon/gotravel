@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gotravel/core/routes/app_routes.dart';
 import 'package:gotravel/data/models/hotel_model.dart';
@@ -14,6 +13,7 @@ import 'package:gotravel/presentation/views/admin/recommendations/pages/admin_re
 import 'package:gotravel/presentation/views/splash/splash_page.dart';
 import 'package:gotravel/presentation/views/user/user_wrapper.dart';
 import 'package:gotravel/presentation/views/user/pages/package_details_page.dart';
+import 'package:gotravel/presentation/views/user/pages/hotel_details_page.dart';
 import 'package:gotravel/presentation/views/user/pages/place_details_page.dart';
 import 'package:gotravel/presentation/views/user/pages/user_packages_page.dart';
 import 'package:gotravel/presentation/views/user/pages/places_page.dart';
@@ -243,6 +243,19 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: PlaceDetailsPage(placeId: placeId),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+      
+      /// Hotel details route
+      GoRoute(
+        path: '/hotel-details/:id',
+        pageBuilder: (context, state) {
+          final hotelId = state.pathParameters['id']!;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: HotelDetailsPage(hotelId: hotelId),
             transitionsBuilder: _slideTransition,
           );
         },

@@ -20,7 +20,6 @@ class _UserHotelsPageState extends State<UserHotelsPage> with SingleTickerProvid
   final TextEditingController _searchController = TextEditingController();
   String _selectedCountry = 'All';
   String _selectedFilterTab = 'All';
-  final List<String> _filterTabs = ['All', 'Recommended', 'Highest Rated'];
 
   @override
   void initState() {
@@ -74,8 +73,6 @@ class _UserHotelsPageState extends State<UserHotelsPage> with SingleTickerProvid
             // Header with search
             _buildHeader(theme),
             
-            // Filter tabs
-            _buildFilterTabs(theme),
             
             // Hotels grid
             Expanded(
@@ -166,39 +163,6 @@ class _UserHotelsPageState extends State<UserHotelsPage> with SingleTickerProvid
     );
   }
 
-  Widget _buildFilterTabs(ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      height: 50,
-      child: Row(
-        children: _filterTabs.map((tab) {
-          final isSelected = _selectedFilterTab == tab;
-          return Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: GestureDetector(
-                onTap: () => setState(() => _selectedFilterTab = tab),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isSelected ? theme.colorScheme.primary : theme.colorScheme.surfaceVariant.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    tab,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: isSelected ? Colors.white : theme.colorScheme.onSurfaceVariant,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
 
   Widget _buildHotelsContent(ThemeData theme) {
     return Consumer<UserHotelsProvider>(
@@ -258,10 +222,10 @@ class _UserHotelsPageState extends State<UserHotelsPage> with SingleTickerProvid
               child: GridView.builder(
                 padding: const EdgeInsets.all(16),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.75,
+                  crossAxisCount: 1,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
+                  mainAxisExtent: 240,
                 ),
                 itemCount: filteredHotels.length,
                 itemBuilder: (context, index) {

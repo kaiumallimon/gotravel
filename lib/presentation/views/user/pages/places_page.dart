@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gotravel/data/models/place_model.dart';
 import 'package:gotravel/data/models/user_favorite_model.dart';
 import 'package:gotravel/presentation/providers/places_provider.dart';
 import 'package:gotravel/presentation/providers/user_favorites_provider.dart';
-import 'package:gotravel/presentation/widgets/cards/place_card.dart';
 import 'package:gotravel/presentation/widgets/common/custom_search_bar.dart';
 import 'package:provider/provider.dart';
 
@@ -15,46 +15,47 @@ class PlacesPage extends StatefulWidget {
   State<PlacesPage> createState() => _PlacesPageState();
 }
 
-class _PlacesPageState extends State<PlacesPage> with SingleTickerProviderStateMixin {
+class _PlacesPageState extends State<PlacesPage>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-  
+
   final TextEditingController _searchController = TextEditingController();
-  String _selectedCategory = 'All';
   String _selectedFilterTab = 'All';
   final List<String> _filterTabs = ['All', 'Featured', 'Popular'];
 
   @override
   void initState() {
     super.initState();
-    
-    // Initialize animations
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-    
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
-    
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final placesProvider = Provider.of<PlacesProvider>(context, listen: false);
-      final favoritesProvider = Provider.of<UserFavoritesProvider>(context, listen: false);
-      
+      final placesProvider = Provider.of<PlacesProvider>(
+        context,
+        listen: false,
+      );
+      final favoritesProvider = Provider.of<UserFavoritesProvider>(
+        context,
+        listen: false,
+      );
+
       placesProvider.initialize();
       favoritesProvider.initialize();
       _animationController.forward();
@@ -71,35 +72,28 @@ class _PlacesPageState extends State<PlacesPage> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
         child: Column(
           children: [
-            // Header with search
             _buildHeader(theme),
-            
-            // Filter tabs
             _buildFilterTabs(theme),
-            
-            // Places grid
-            Expanded(
-              child: _buildPlacesContent(theme),
-            ),
+            Expanded(child: _buildPlacesContent(theme)),
           ],
         ),
       ),
     );
   }
 
+  // ---------------- Header ----------------
   Widget _buildHeader(ThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title and back button
           Row(
             children: [
               IconButton(
@@ -112,8 +106,8 @@ class _PlacesPageState extends State<PlacesPage> with SingleTickerProviderStateM
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Discover Places',
-                  style: theme.textTheme.headlineMedium?.copyWith(
+                  'Places',
+                  style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -130,19 +124,13 @@ class _PlacesPageState extends State<PlacesPage> with SingleTickerProviderStateM
             ],
           ),
           const SizedBox(height: 16),
-          
-          // Dynamic Search bar
           FadeTransition(
             opacity: _fadeAnimation,
             child: CustomSearchBar(
               controller: _searchController,
-              hintText: 'Search ${_selectedCategory.toLowerCase() == 'all' ? '' : '${_selectedCategory.toLowerCase()} '}places...',
-              onChanged: (query) {
-                _performDynamicSearch(query);
-              },
-              onSubmitted: (query) {
-                _performDynamicSearch(query);
-              },
+              hintText: 'Search places...',
+              onChanged: _performDynamicSearch,
+              onSubmitted: _performDynamicSearch,
             ),
           ),
         ],
@@ -150,173 +138,61 @@ class _PlacesPageState extends State<PlacesPage> with SingleTickerProviderStateM
     );
   }
 
+  // ---------------- Filter Tabs ----------------
   Widget _buildFilterTabs(ThemeData theme) {
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SlideTransition(
         position: _slideAnimation,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Filter Tabs Row
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: _filterTabs.map((tab) {
-                    final isSelected = _selectedFilterTab == tab;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                        child: FilterChip(
-                          label: Text(
-                            tab,
-                            style: TextStyle(
-                              color: isSelected 
-                                ? theme.colorScheme.onPrimary
-                                : theme.colorScheme.onSurfaceVariant,
-                              fontWeight: isSelected 
-                                ? FontWeight.w600 
-                                : FontWeight.w500,
-                            ),
-                          ),
-                          selected: isSelected,
-                          selectedColor: theme.colorScheme.primary,
-                          backgroundColor: theme.colorScheme.surfaceVariant,
-                          checkmarkColor: theme.colorScheme.onPrimary,
-                          elevation: isSelected ? 4 : 0,
-                          shadowColor: theme.colorScheme.primary.withOpacity(0.3),
-                          onSelected: (selected) {
-                            if (selected) {
-                              setState(() {
-                                _selectedFilterTab = tab;
-                                _selectedCategory = 'All'; // Reset category when switching filter tabs
-                              });
-                              _handleFilterTabSelection(tab);
-                            }
-                          },
-                        ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: _filterTabs.map((tab) {
+                final isSelected = _selectedFilterTab == tab;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: FilterChip(
+                    label: Text(
+                      tab,
+                      style: TextStyle(
+                        color: isSelected
+                            ? theme.colorScheme.onPrimary
+                            : theme.colorScheme.onSurfaceVariant,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
                       ),
-                    );
-                  }).toList(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Categories Row
-              Consumer<PlacesProvider>(
-                builder: (context, placesProvider, child) {
-                  final allCategories = ['All', ...placesProvider.categories];
-                  return SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: allCategories.map((category) {
-                        final isSelected = _selectedCategory == category;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 250),
-                            curve: Curves.easeInOut,
-                            child: ActionChip(
-                              label: Text(
-                                category,
-                                style: TextStyle(
-                                  color: isSelected 
-                                    ? theme.colorScheme.onSecondaryContainer
-                                    : theme.colorScheme.onSurface,
-                                  fontSize: 13,
-                                  fontWeight: isSelected 
-                                    ? FontWeight.w600 
-                                    : FontWeight.w400,
-                                ),
-                              ),
-                              backgroundColor: isSelected 
-                                ? theme.colorScheme.secondaryContainer
-                                : theme.colorScheme.surface,
-                              side: BorderSide(
-                                color: isSelected 
-                                  ? theme.colorScheme.secondary
-                                  : theme.colorScheme.outline.withOpacity(0.5),
-                                width: isSelected ? 2 : 1,
-                              ),
-                              elevation: isSelected ? 2 : 0,
-                              shadowColor: theme.colorScheme.secondary.withOpacity(0.2),
-                              onPressed: () {
-                                setState(() {
-                                  _selectedCategory = category;
-                                });
-                                _handleCategorySelection(category);
-                              },
-                            ),
-                          ),
-                        );
-                      }).toList(),
                     ),
-                  );
-                },
-              ),
-            ],
+                    selected: isSelected,
+                    selectedColor: theme.colorScheme.primary,
+                    backgroundColor: theme.colorScheme.surfaceVariant,
+                    checkmarkColor: theme.colorScheme.onPrimary,
+                    onSelected: (selected) {
+                      if (selected) {
+                        setState(() {
+                          _selectedFilterTab = tab;
+                        });
+                        _handleFilterTabSelection(tab);
+                      }
+                    },
+                  ),
+                );
+              }).toList(),
+            ),
           ),
         ),
       ),
     );
   }
 
-  void _handleFilterTabSelection(String tab) {
-    final placesProvider = Provider.of<PlacesProvider>(context, listen: false);
-    
-    switch (tab) {
-      case 'All':
-        placesProvider.loadPlaces();
-        break;
-      case 'Featured':
-        placesProvider.loadFeaturedPlaces();
-        break;
-      case 'Popular':
-        placesProvider.loadPopularPlaces();
-        break;
-    }
-  }
-
-  void _handleCategorySelection(String category) {
-    final placesProvider = Provider.of<PlacesProvider>(context, listen: false);
-    
-    if (category == 'All') {
-      // Apply the current filter tab selection instead of just loading all places
-      _handleFilterTabSelection(_selectedFilterTab);
-    } else {
-      placesProvider.loadPlacesByCategory(category);
-    }
-    
-    // Clear search when changing category
-    _searchController.clear();
-  }
-
-  void _performDynamicSearch(String query) {
-    final placesProvider = Provider.of<PlacesProvider>(context, listen: false);
-    
-    if (query.isEmpty) {
-      // Restore current filter based on selections
-      if (_selectedCategory == 'All') {
-        _handleFilterTabSelection(_selectedFilterTab);
-      } else {
-        _handleCategorySelection(_selectedCategory);
-      }
-    } else {
-      // Perform search - the filtering by category will be handled in the UI
-      placesProvider.searchPlaces(query);
-    }
-  }
-
+  // ---------------- Places Content ----------------
   Widget _buildPlacesContent(ThemeData theme) {
     return Consumer2<PlacesProvider, UserFavoritesProvider>(
       builder: (context, placesProvider, favoritesProvider, child) {
         if (placesProvider.isLoading) {
-          return const Center(
-            child: CupertinoActivityIndicator(),
-          );
+          return const Center(child: CupertinoActivityIndicator());
         }
 
         if (placesProvider.error != null) {
@@ -330,10 +206,7 @@ class _PlacesPageState extends State<PlacesPage> with SingleTickerProviderStateM
                   color: theme.colorScheme.error,
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  'Something went wrong',
-                  style: theme.textTheme.titleLarge,
-                ),
+                Text('Something went wrong', style: theme.textTheme.titleLarge),
                 const SizedBox(height: 8),
                 Text(
                   placesProvider.error!,
@@ -344,9 +217,7 @@ class _PlacesPageState extends State<PlacesPage> with SingleTickerProviderStateM
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () {
-                    placesProvider.loadPlaces();
-                  },
+                  onPressed: placesProvider.loadPlaces,
                   child: const Text('Try Again'),
                 ),
               ],
@@ -367,10 +238,7 @@ class _PlacesPageState extends State<PlacesPage> with SingleTickerProviderStateM
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  'No places found',
-                  style: theme.textTheme.titleLarge,
-                ),
+                Text('No places found', style: theme.textTheme.titleLarge),
                 const SizedBox(height: 8),
                 Text(
                   'Try adjusting your search or filters',
@@ -385,13 +253,7 @@ class _PlacesPageState extends State<PlacesPage> with SingleTickerProviderStateM
 
         return Padding(
           padding: const EdgeInsets.all(16),
-          child: GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 0.75,
-            ),
+          child: ListView.builder(
             itemCount: places.length,
             itemBuilder: (context, index) {
               final place = places[index];
@@ -400,53 +262,13 @@ class _PlacesPageState extends State<PlacesPage> with SingleTickerProviderStateM
                 itemId: place.id,
               );
 
-              return AnimatedContainer(
-                duration: Duration(milliseconds: 300 + (index * 50)),
-                curve: Curves.easeOutCubic,
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 0.5),
-                      end: Offset.zero,
-                    ).animate(CurvedAnimation(
-                      parent: _animationController,
-                      curve: Interval(
-                        (index * 0.1).clamp(0.0, 1.0),
-                        ((index * 0.1) + 0.3).clamp(0.0, 1.0),
-                        curve: Curves.easeOutCubic,
-                      ),
-                    )),
-                    child: PlaceCard(
-                place: place,
-                isFavorite: isFavorite,
-                width: double.infinity,
-                height: double.infinity,
-                onTap: () {
-                  // TODO: Navigate to place details
-                  placesProvider.loadPlaceDetails(place.id);
-                },
-                onFavoritePressed: () async {
-                  final newStatus = await favoritesProvider.toggleFavorite(
-                    itemType: FavoriteItemType.place,
-                    itemId: place.id,
-                  );
-                  
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          newStatus
-                              ? 'Added to favorites'
-                              : 'Removed from favorites',
-                        ),
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
-                  }
-                },
-                    ),
-                  ),
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _buildPlaceCard(
+                  theme,
+                  place,
+                  isFavorite,
+                  favoritesProvider,
                 ),
               );
             },
@@ -456,36 +278,164 @@ class _PlacesPageState extends State<PlacesPage> with SingleTickerProviderStateM
     );
   }
 
+  // ---------------- Helper Methods ----------------
   List<PlaceModel> _getPlacesToShow(PlacesProvider provider) {
-    List<PlaceModel> basePlaces;
-    
-    // Get base places based on filter tab
     switch (_selectedFilterTab) {
       case 'Featured':
-        basePlaces = provider.featuredPlaces;
+        return provider.featuredPlaces;
+      case 'Popular':
+        return provider.popularPlaces;
+      default:
+        return provider.places;
+    }
+  }
+
+  void _handleFilterTabSelection(String tab) {
+    final provider = Provider.of<PlacesProvider>(context, listen: false);
+    switch (tab) {
+      case 'Featured':
+        provider.loadFeaturedPlaces();
         break;
       case 'Popular':
-        basePlaces = provider.popularPlaces;
+        provider.loadPopularPlaces();
         break;
       default:
-        basePlaces = provider.places;
-        break;
+        provider.loadPlaces();
     }
-    
-    // Apply category filter if not 'All' and not in search mode
-    if (_selectedCategory != 'All' && _searchController.text.isEmpty) {
-      return basePlaces.where((place) => 
-        place.category?.toLowerCase() == _selectedCategory.toLowerCase()
-      ).toList();
+  }
+
+  void _performDynamicSearch(String query) {
+    final provider = Provider.of<PlacesProvider>(context, listen: false);
+    if (query.isEmpty) {
+      _handleFilterTabSelection(_selectedFilterTab);
+    } else {
+      provider.searchPlaces(query);
     }
-    
-    // Apply category filter to search results if searching within a category
-    if (_selectedCategory != 'All' && _searchController.text.isNotEmpty) {
-      return basePlaces.where((place) => 
-        place.category?.toLowerCase() == _selectedCategory.toLowerCase()
-      ).toList();
-    }
-    
-    return basePlaces;
+  }
+
+  // ---------------- Place Card ----------------
+  Widget _buildPlaceCard(
+    ThemeData theme,
+    PlaceModel place,
+    bool isFavorite,
+    UserFavoritesProvider favoritesProvider,
+  ) {
+    return GestureDetector(
+      onTap: () => context.push('/place-details/${place.id}'),
+      child: Container(
+        height: 200,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: theme.colorScheme.surfaceVariant,
+        ),
+        child: Stack(
+          children: [
+            // Image
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                image: place.coverImage != null && place.coverImage!.isNotEmpty
+                    ? DecorationImage(
+                        image: NetworkImage(place.coverImage!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              child: (place.coverImage == null || place.coverImage!.isEmpty)
+                  ? Center(
+                      child: Icon(
+                        CupertinoIcons.photo,
+                        size: 48,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    )
+                  : null,
+            ),
+
+            // Gradient overlay
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                ),
+              ),
+            ),
+
+            // Favorite icon
+            Positioned(
+              top: 12,
+              right: 12,
+              child: GestureDetector(
+                onTap: () async {
+                  await favoritesProvider.toggleFavorite(
+                    itemType: FavoriteItemType.place,
+                    itemId: place.id,
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: Colors.white70,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isFavorite
+                        ? CupertinoIcons.heart_fill
+                        : CupertinoIcons.heart,
+                    color: isFavorite ? Colors.red : Colors.black,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
+
+            // Text info
+            Positioned(
+              bottom: 12,
+              left: 12,
+              right: 12,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    place.name ?? 'Unknown Place',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(
+                        CupertinoIcons.location_solid,
+                        color: Colors.white70,
+                        size: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          '${place.city ?? 'Unknown'}, ${place.country ?? ''}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.white70,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
