@@ -1,0 +1,11 @@
+{
+  "name": "Swiss Alps",
+  "description": "The Swiss Alps offer some of the world's most spectacular mountain scenery, featuring snow-capped peaks, pristine glacial lakes, charming alpine villages, and world-class skiing. This UNESCO World Heritage region provides year-round outdoor adventures from hiking and mountaineering in summer to skiing and snowboarding in winter.",
+  "country": "Switzerland",
+  "category": "Mountain",
+  "latitude": 46.5197,
+  "longitude": 7.6323,
+  "rating": 4.8,
+  "is_featured": true,
+  "is_active": true
+}

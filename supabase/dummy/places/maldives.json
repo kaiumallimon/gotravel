@@ -1,0 +1,11 @@
+{
+  "name": "Maldives",
+  "description": "The Maldives is a tropical paradise consisting of 1,190 coral islands grouped into 26 atolls. Known for crystal-clear turquoise waters, pristine white sand beaches, luxurious overwater bungalows, and world-class diving spots with vibrant marine life including whale sharks and manta rays.",
+  "country": "Maldives",
+  "category": "Beach",
+  "latitude": 3.2028,
+  "longitude": 73.2207,
+  "rating": 4.9,
+  "is_featured": true,
+  "is_active": true
+}

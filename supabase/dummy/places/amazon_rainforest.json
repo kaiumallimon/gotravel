@@ -1,0 +1,11 @@
+{
+  "name": "Amazon Rainforest",
+  "description": "The Amazon Rainforest is the world's largest tropical rainforest, spanning across 9 countries with the majority in Brazil. Home to incredible biodiversity, indigenous communities, and the mighty Amazon River. Experience wildlife spotting, canopy walks, river cruises, and learn about conservation efforts.",
+  "country": "Brazil",
+  "category": "Forest",
+  "latitude": -3.4653,
+  "longitude": -62.2159,
+  "rating": 4.7,
+  "is_featured": true,
+  "is_active": true
+}

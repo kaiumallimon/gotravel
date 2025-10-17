@@ -72,6 +72,43 @@ class _AddPlacePageState extends State<AddPlacePage> {
     _existingImageUrls = [...place.images];
   }
 
+  void _populateFromJson(Map<String, dynamic> data) {
+    setState(() {
+      _nameController.text = data['name'] ?? '';
+      _countryController.text = data['country'] ?? '';
+      _cityController.text = data['city'] ?? '';
+      _descriptionController.text = data['description'] ?? '';
+      _ratingController.text = (data['rating'] ?? 0.0).toString();
+      _latitudeController.text = data['latitude']?.toString() ?? '';
+      _longitudeController.text = data['longitude']?.toString() ?? '';
+      _bestTimeController.text = data['best_time_to_visit'] ?? '';
+      _temperatureController.text = data['average_temperature'] ?? '';
+      _languageController.text = data['local_language'] ?? '';
+      _timeZoneController.text = data['time_zone'] ?? '';
+      
+      // Handle arrays - join with commas
+      if (data['famous_for'] != null && data['famous_for'] is List) {
+        _famousForController.text = (data['famous_for'] as List).join(', ');
+      }
+      if (data['activities'] != null && data['activities'] is List) {
+        _activitiesController.text = (data['activities'] as List).join(', ');
+      }
+      
+      // Category dropdown
+      if (data['category'] != null && _categories.contains(data['category'])) {
+        _selectedCategory = data['category'];
+      }
+      
+      // Boolean values
+      _isActive = data['is_active'] ?? true;
+      _isFeatured = data['is_featured'] ?? false;
+      
+      // Integer values
+      _popularRanking = data['popular_ranking'] ?? 0;
+      _visitCount = data['visit_count'] ?? 0;
+    });
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -136,49 +173,73 @@ class _AddPlacePageState extends State<AddPlacePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // JSON Import Section
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(CupertinoIcons.doc_text, color: theme.colorScheme.primary),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Import from JSON',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Consumer<AdminPlacesProvider>(
-                        builder: (context, provider, child) {
-                          return CustomTextArea(
-                            controller: provider.jsonController,
-                            labelText: "Paste JSON data here",
-                            maxLines: 5,
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Provider.of<AdminPlacesProvider>(context, listen: false)
-                                .importFromJson(context);
-                          },
-                          icon: Icon(CupertinoIcons.arrow_down_doc),
-                          label: Text('Import from JSON'),
-                        ),
-                      ),
-                    ],
-                  ),
+              // JSON Import Button
+              Align(
+                alignment: Alignment.center,
+                child: Consumer<AdminPlacesProvider>(
+                  builder: (context, provider, child) {
+                    return TextButton.icon(
+                      onPressed: provider.isLoading
+                          ? null
+                          : () async {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                builder: (context) {
+                                  return Padding(
+                                    padding: EdgeInsets.only(
+                                      bottom: MediaQuery.of(context).viewInsets.bottom,
+                                    ),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(20),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Text(
+                                            "Import Place from JSON",
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 20),
+                                          CustomTextArea(
+                                            controller: provider.jsonController,
+                                            labelText: "Paste JSON data here",
+                                            maxLines: 8,
+                                          ),
+                                          const SizedBox(height: 20),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.pop(context);
+                                                },
+                                                child: const Text("Cancel"),
+                                              ),
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  final jsonData = provider.importFromJson(context);
+                                                  if (jsonData != null) {
+                                                    _populateFromJson(jsonData);
+                                                  }
+                                                },
+                                                child: const Text("Import"),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                      icon: const Icon(Icons.file_upload),
+                      label: const Text("Import from JSON"),
+                    );
+                  },
                 ),
               ),
               

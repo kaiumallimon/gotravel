@@ -1,0 +1,11 @@
+{
+  "name": "Bora Bora",
+  "description": "Bora Bora is a small South Pacific island surrounded by a lagoon and a barrier coral reef. Known as the 'Pearl of the Pacific', it features a dormant volcano at its center, luxury resorts with overwater bungalows, crystal-clear lagoons perfect for snorkeling, and romantic sunset views.",
+  "country": "French Polynesia",
+  "category": "Beach",
+  "latitude": -16.5004,
+  "longitude": -151.7415,
+  "rating": 4.9,
+  "is_featured": true,
+  "is_active": true
+}

@@ -1,0 +1,11 @@
+{
+  "name": "Rocky Mountain National Park",
+  "description": "Rocky Mountain National Park in Colorado offers majestic mountain peaks, alpine lakes, diverse wildlife, and over 350 miles of hiking trails. The park features the iconic Trail Ridge Road, one of the highest paved roads in North America, providing breathtaking views of the Continental Divide.",
+  "country": "United States",
+  "category": "Mountain",
+  "latitude": 40.3428,
+  "longitude": -105.6836,
+  "rating": 4.6,
+  "is_featured": false,
+  "is_active": true
+}

@@ -1,0 +1,11 @@
+{
+  "name": "Mount Fuji",
+  "description": "Mount Fuji is Japan's highest mountain and most iconic symbol, located southwest of Tokyo. This active volcano with its perfectly symmetrical cone shape is considered sacred and offers climbing opportunities during the official season (July-September). Surrounding areas feature lakes, hot springs, and stunning views.",
+  "country": "Japan",
+  "category": "Mountain",
+  "latitude": 35.3606,
+  "longitude": 138.7274,
+  "rating": 4.8,
+  "is_featured": true,
+  "is_active": true
+}

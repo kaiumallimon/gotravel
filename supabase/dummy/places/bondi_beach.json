@@ -1,0 +1,11 @@
+{
+  "name": "Bondi Beach",
+  "description": "Bondi Beach is one of Australia's most famous beaches, located in Sydney. Known for its golden sand, excellent surfing conditions, vibrant beach culture, coastal walks, trendy cafes, and the annual Sculpture by the Sea exhibition. Perfect for swimming, surfing, and people watching.",
+  "country": "Australia",
+  "category": "Beach",
+  "latitude": -33.8915,
+  "longitude": 151.2767,
+  "rating": 4.4,
+  "is_featured": false,
+  "is_active": true
+}

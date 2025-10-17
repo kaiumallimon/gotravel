@@ -1,0 +1,11 @@
+{
+  "name": "Tuscany Countryside",
+  "description": "The Tuscany countryside in central Italy is renowned for its rolling hills, vineyard landscapes, medieval hilltop towns, Renaissance art, and world-class cuisine. Experience wine tasting in Chianti, explore historic cities like Siena and San Gimignano, and enjoy authentic Italian rural life.",
+  "country": "Italy",
+  "category": "Suburban",
+  "latitude": 43.7711,
+  "longitude": 11.2486,
+  "rating": 4.7,
+  "is_featured": false,
+  "is_active": true
+}

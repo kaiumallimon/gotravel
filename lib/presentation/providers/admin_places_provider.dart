@@ -262,10 +262,10 @@ class AdminPlacesProvider with ChangeNotifier {
     _additionalImages = [];
   }
 
-  // JSON Import functionality
-  void importFromJson(BuildContext context) {
+  // JSON Import functionality - Populate form fields instead of direct save
+  Map<String, dynamic>? importFromJson(BuildContext context) {
     final jsonString = jsonController.text;
-    if (jsonString.isEmpty) return;
+    if (jsonString.isEmpty) return null;
 
     try {
       final data = jsonDecode(jsonString);
@@ -275,55 +275,31 @@ class AdminPlacesProvider with ChangeNotifier {
         throw Exception('Missing required fields: name and country are required');
       }
 
-      // Create place from JSON data
-      final place = PlaceModel(
-        id: _uuid.v4(),
-        name: data['name'] ?? '',
-        description: data['description'],
-        country: data['country'] ?? '',
-        stateProvince: data['state_province'],
-        city: data['city'],
-        latitude: data['latitude']?.toDouble(),
-        longitude: data['longitude']?.toDouble(),
-        category: data['category'],
-        popularRanking: data['popular_ranking'] ?? 0,
-        visitCount: data['visit_count'] ?? 0,
-        rating: (data['rating'] ?? 0.0).toDouble(),
-        reviewsCount: data['reviews_count'] ?? 0,
-        coverImage: data['cover_image'] ?? '',
-        images: List<String>.from(data['images'] ?? []),
-        bestTimeToVisit: data['best_time_to_visit'],
-        averageTemperature: data['average_temperature'],
-        currency: data['currency'] ?? 'USD',
-        localLanguage: data['local_language'],
-        timeZone: data['time_zone'],
-        famousFor: List<String>.from(data['famous_for'] ?? []),
-        activities: List<String>.from(data['activities'] ?? []),
-        isFeatured: data['is_featured'] ?? false,
-        isActive: data['is_active'] ?? true,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-
-      // Add the place
-      addPlace(place);
-
-      // Clear JSON controller
+      // Clear JSON controller and close modal
       jsonController.clear();
+      
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Close the JSON import modal
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('JSON data imported successfully! Review and save the place.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Place imported successfully from JSON'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      // Return the data to populate form fields
+      return data;
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error importing JSON: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error importing JSON: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return null;
     }
   }
 

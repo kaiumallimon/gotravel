@@ -1,0 +1,11 @@
+{
+  "name": "Black Forest",
+  "description": "The Black Forest (Schwarzwald) in southwestern Germany is a mountainous region famous for its dense, dark forests, picturesque villages, cuckoo clocks, and fairy tale atmosphere. Experience hiking trails, thermal spas, traditional German cuisine, and the scenic Schwarzwaldhochstraße scenic route.",
+  "country": "Germany",
+  "category": "Forest",
+  "latitude": 48.3,
+  "longitude": 8.2,
+  "rating": 4.5,
+  "is_featured": false,
+  "is_active": true
+}
