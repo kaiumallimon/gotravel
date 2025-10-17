@@ -24,12 +24,15 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final provider = Provider.of<ConversationProvider>(context, listen: false);
       final conversation = provider.conversations.firstWhere(
         (c) => c.id == widget.conversationId,
       );
-      provider.setActiveConversation(conversation);
+      await provider.setActiveConversation(conversation);
+      
+      // Scroll to bottom after messages are loaded
+      _scrollToBottom();
     });
   }
 
@@ -42,12 +45,14 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
       });
     }
   }
@@ -98,6 +103,13 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
             return const Center(
               child: CircularProgressIndicator(),
             );
+          }
+
+          // Scroll to bottom when messages are loaded
+          if (provider.messages.isNotEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _scrollToBottom();
+            });
           }
 
           return Column(

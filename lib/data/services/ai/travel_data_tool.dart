@@ -12,7 +12,7 @@ class TravelDataTool {
     try {
       var query = _supabase
           .from('packages')
-          .select('id, name, destination, country, price_per_person, duration_days, is_active')
+          .select('id, name, destination, country, price, duration_days, is_active')
           .eq('is_active', true);
 
       if (country != null && country.isNotEmpty) {
@@ -24,7 +24,7 @@ class TravelDataTool {
       }
 
       final response = await query
-          .order('price_per_person', ascending: true)
+          .order('price', ascending: true)
           .limit(limit);
 
       return {
@@ -163,7 +163,7 @@ class TravelDataTool {
     for (var pkg in packages) {
       result.writeln('📦 ${pkg['name']}');
       result.writeln('   📍 ${pkg['destination']}, ${pkg['country']}');
-      result.writeln('   💰 \$${pkg['price_per_person']} per person');
+      result.writeln('   💰 \$${pkg['price']} per person');
       result.writeln('   ⏱️ ${pkg['duration_days']} days');
       if (pkg['description'] != null) {
         result.writeln('   ℹ️ ${pkg['description'].toString().substring(0, pkg['description'].toString().length > 100 ? 100 : pkg['description'].toString().length)}...');

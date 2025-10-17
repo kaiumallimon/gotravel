@@ -1,216 +1,227 @@
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:gotravel/data/services/ai/weather_tool.dart';
-import 'package:gotravel/data/services/ai/travel_data_tool.dart';
+import 'package:gotravel/data/services/ai/ai_query_interpreter.dart';
+import 'package:gotravel/data/services/ai/dynamic_database_tool.dart';
+import 'package:gotravel/data/services/ai/database_schema.dart';
 
 class AIService {
   final Gemini _gemini = Gemini.instance;
+  final AIQueryInterpreter _queryInterpreter = AIQueryInterpreter();
 
-  /// Process user message and generate AI response with tool calling
   Future<String> chat(String userMessage, List<Map<String, String>> conversationHistory) async {
     try {
-      // Detect if user is asking about weather
-      if (_isWeatherQuery(userMessage)) {
-        final location = _extractLocation(userMessage);
-        if (location.isNotEmpty) {
-          final weatherData = await WeatherTool.getCurrentWeather(location);
-          final weatherInfo = WeatherTool.formatWeatherForAI(weatherData);
-          
-          // Ask Gemini to format the response nicely
-          final prompt = 'Based on this weather data, provide a friendly and helpful response to the user:\n\n$weatherInfo\n\nUser asked: "$userMessage"\n\nProvide a natural, conversational response.';
-          
-          try {
-            final response = await _gemini.text(prompt);
-            return response?.output ?? weatherInfo;
-          } catch (e) {
-            // If Gemini fails, return formatted data directly
-            return weatherInfo;
-          }
-        }
-      }
+      final conversationContext = conversationHistory.map((msg) => "${msg['role']}: ${msg['content']}").join('\n');
 
-      // Detect if user is asking about packages
-      if (_isPackageQuery(userMessage)) {
-        final country = _extractCountry(userMessage);
-        final packagesData = await TravelDataTool.getCheapestPackages(
-          country: country,
-          limit: 5,
-        );
-        final packagesInfo = TravelDataTool.formatPackagesForAI(packagesData);
-        
-        final prompt = 'Based on this travel package data, provide a friendly and helpful response to the user:\n\n$packagesInfo\n\nUser asked: "$userMessage"\n\nProvide recommendations and explain why these packages are good choices.';
-        
-        try {
-          final response = await _gemini.text(prompt);
-          return response?.output ?? packagesInfo;
-        } catch (e) {
-          // If Gemini fails, return formatted data directly
-          return packagesInfo;
-        }
-      }
+      print('Step 1: Classifying intent...');
+      final intent = await _classifyIntent(userMessage, conversationContext);
+      print('Intent: ${intent.type}');
 
-      // Detect if user is asking about places
-      if (_isPlaceQuery(userMessage)) {
-        final searchTerm = _extractSearchTerm(userMessage);
-        final placesData = await TravelDataTool.searchPlaces(searchTerm);
-        final placesInfo = TravelDataTool.formatPlacesForAI(placesData);
-        
-        final prompt = 'Based on this places data, provide a friendly and helpful response to the user:\n\n$placesInfo\n\nUser asked: "$userMessage"\n\nProvide helpful information about these places.';
-        
-        try {
-          final response = await _gemini.text(prompt);
-          return response?.output ?? placesInfo;
-        } catch (e) {
-          // If Gemini fails, return formatted data directly
-          return placesInfo;
-        }
-      }
+      print('Step 2: Calling tools...');
+      final toolResult = await _callTools(intent, userMessage);
+      print('Tools executed');
 
-      // Detect if user is asking about hotels
-      if (_isHotelQuery(userMessage)) {
-        final location = _extractLocation(userMessage);
-        final hotelsData = await TravelDataTool.searchHotels(
-          city: location,
-          limit: 5,
-        );
-        final hotelsInfo = TravelDataTool.formatHotelsForAI(hotelsData);
-        
-        final prompt = 'Based on this hotel data, provide a friendly and helpful response to the user:\n\n$hotelsInfo\n\nUser asked: "$userMessage"\n\nProvide helpful recommendations about these hotels.';
-        
-        try {
-          final response = await _gemini.text(prompt);
-          return response?.output ?? hotelsInfo;
-        } catch (e) {
-          // If Gemini fails, return formatted data directly
-          return hotelsInfo;
-        }
-      }
+      print('Step 3: Formatting answer...');
+      final finalAnswer = await _formatFinalAnswer(
+        userMessage: userMessage,
+        intent: intent,
+        toolResult: toolResult,
+        context: conversationContext,
+      );
+      print('Answer ready');
 
-      // General travel assistant response - try Gemini first, fallback to helpful message
-      final conversationContext = conversationHistory
-          .map((msg) => '${msg['role']}: ${msg['content']}')
-          .join('\n');
-      
-      final systemPrompt = 'You are a helpful travel assistant for GoTravel app. You help users with travel recommendations, weather information, finding tour packages, discovering places to visit, and hotel recommendations.\n\nBe friendly, concise, and helpful.\n\nPrevious conversation:\n$conversationContext\n\nUser: $userMessage\n\nAssistant:';
-      
-      try {
-        final response = await _gemini.text(systemPrompt);
-        return response?.output ?? _getFallbackResponse(userMessage);
-      } catch (e) {
-        return _getFallbackResponse(userMessage);
-      }
+      return finalAnswer;
     } catch (e) {
-      // Check if it's an API key error
+      print('Error: $e');
       if (e.toString().contains('404') || e.toString().contains('API key')) {
-        return '⚠️ API Configuration Error\n\nThe Gemini API key is not configured properly. Please:\n\n1. Get a free API key from https://makersuite.google.com/app/apikey\n2. Add it to your .env file as GEMINI_API_KEY\n3. Restart the app\n\nIn the meantime, I can still help you with:\n• Weather information\n• Finding tour packages\n• Discovering places\n• Hotel recommendations\n\nTry asking: "Show me packages in Bangladesh" or "Find hotels in Dhaka"';
+        return _getAPIKeyError();
       }
-      return 'I encountered an error: ${e.toString().split('\n').first}. Please try again or ask something else.';
+      return 'I encountered an error: ${e.toString().split('\n').first}. Please try again.';
     }
   }
 
-  // Fallback response when Gemini is unavailable
-  String _getFallbackResponse(String userMessage) {
-    return '''Hello! I'm your AI Travel Assistant. 
+  Future<UserIntent> _classifyIntent(String userMessage, String context) async {
+    final lowerMessage = userMessage.toLowerCase();
 
-I can help you with:
+    if (_isWeatherQuery(lowerMessage)) {
+      return UserIntent(
+        type: IntentType.weather,
+        parameters: {'location': _extractLocation(userMessage)},
+      );
+    }
 
-🌤️ **Weather Information**
-Try: "What's the weather in Cox's Bazar?"
+    if (_isUserDataQuery(lowerMessage)) {
+      return UserIntent(
+        type: IntentType.userData,
+        parameters: {'query': userMessage},
+      );
+    }
 
-📦 **Tour Packages** 
-Try: "Show me cheapest packages in Bangladesh"
+    if (_isDatabaseQuery(lowerMessage)) {
+      return UserIntent(
+        type: IntentType.database,
+        parameters: {'query': userMessage},
+      );
+    }
 
-🏞️ **Places to Visit**
-Try: "Popular places to visit"
-
-🏨 **Hotels**
-Try: "Find hotels in Dhaka"
-
-What would you like to know about?''';
+    return UserIntent(
+      type: IntentType.conversation,
+      parameters: {'query': userMessage},
+    );
   }
 
-  // Helper methods to detect query intent
   bool _isWeatherQuery(String message) {
-    final lowerMessage = message.toLowerCase();
-    return lowerMessage.contains('weather') ||
-           lowerMessage.contains('temperature') ||
-           lowerMessage.contains('forecast') ||
-           lowerMessage.contains('hot') ||
-           lowerMessage.contains('cold') ||
-           lowerMessage.contains('rain');
+    return message.contains('weather') || message.contains('temperature') || message.contains('forecast') || message.contains('climate');
   }
 
-  bool _isPackageQuery(String message) {
-    final lowerMessage = message.toLowerCase();
-    return lowerMessage.contains('package') ||
-           lowerMessage.contains('tour') ||
-           lowerMessage.contains('trip') ||
-           lowerMessage.contains('cheapest') ||
-           lowerMessage.contains('affordable');
+  bool _isUserDataQuery(String message) {
+    return (message.contains('my ') || message.contains('mine')) && (message.contains('booking') || message.contains('favorite') || message.contains('profile') || message.contains('payment'));
   }
 
-  bool _isPlaceQuery(String message) {
-    final lowerMessage = message.toLowerCase();
-    return lowerMessage.contains('place') ||
-           lowerMessage.contains('visit') ||
-           lowerMessage.contains('attraction') ||
-           lowerMessage.contains('see') ||
-           lowerMessage.contains('destination');
+  bool _isDatabaseQuery(String message) {
+    return message.contains('show') || message.contains('find') || message.contains('search') || message.contains('get') || message.contains('list') || message.contains('package') || message.contains('hotel') || message.contains('place') || message.contains('cheapest') || message.contains('best') || message.contains('top');
   }
 
-  bool _isHotelQuery(String message) {
-    final lowerMessage = message.toLowerCase();
-    return lowerMessage.contains('hotel') ||
-           lowerMessage.contains('stay') ||
-           lowerMessage.contains('accommodation') ||
-           lowerMessage.contains('resort');
+  Future<ToolResult> _callTools(UserIntent intent, String userMessage) async {
+    switch (intent.type) {
+      case IntentType.weather:
+        return await _callWeatherTool(intent.parameters['location'] ?? '');
+      case IntentType.userData:
+      case IntentType.database:
+        return await _callDatabaseTool(userMessage);
+      case IntentType.conversation:
+        return ToolResult(success: true, data: null, message: 'No tool needed');
+    }
   }
 
-  // Helper methods to extract information from user query
+  Future<ToolResult> _callWeatherTool(String location) async {
+    try {
+      if (location.isEmpty) {
+        return ToolResult(success: false, data: null, message: 'Location not specified');
+      }
+      final weatherData = await WeatherTool.getCurrentWeather(location);
+      final formattedWeather = WeatherTool.formatWeatherForAI(weatherData);
+      return ToolResult(success: true, data: formattedWeather, message: 'Weather retrieved');
+    } catch (e) {
+      return ToolResult(success: false, data: null, message: 'Failed to get weather: ${e.toString()}');
+    }
+  }
+
+  Future<ToolResult> _callDatabaseTool(String userMessage) async {
+    try {
+      final queryIntent = await _queryInterpreter.interpretQuery(userMessage);
+      final result = await _queryInterpreter.executeQuery(queryIntent);
+      if (result['success'] == true) {
+        final formattedData = DynamicDatabaseTool.formatResultsForAI(result, queryIntent.table);
+        return ToolResult(success: true, data: formattedData, message: 'Query executed', metadata: {'table': queryIntent.table, 'count': result['count']});
+      } else {
+        return ToolResult(success: false, data: null, message: result['error'] ?? 'Query failed');
+      }
+    } catch (e) {
+      return ToolResult(success: false, data: null, message: 'Database tool error: ${e.toString()}');
+    }
+  }
+
+  Future<String> _formatFinalAnswer({required String userMessage, required UserIntent intent, required ToolResult toolResult, required String context}) async {
+    if (!toolResult.success) {
+      return _handleToolFailure(intent, toolResult.message);
+    }
+    if (toolResult.data == null && intent.type == IntentType.conversation) {
+      return await _generateConversationalResponse(userMessage, context);
+    }
+    switch (intent.type) {
+      case IntentType.weather:
+        return await _formatWeatherAnswer(userMessage, toolResult.data, context);
+      case IntentType.userData:
+      case IntentType.database:
+        return await _formatDatabaseAnswer(userMessage, toolResult, context);
+      case IntentType.conversation:
+        return toolResult.data ?? _getFallbackResponse();
+    }
+  }
+
+  Future<String> _formatWeatherAnswer(String userMessage, String? weatherData, String context) async {
+    if (weatherData == null) return 'Weather data not available.';
+    try {
+      final prompt = 'You are a friendly travel assistant. The user asked about weather.\n\n$weatherData\n\nUser: "$userMessage"\n\nProvide a natural response with travel recommendations.';
+      final response = await _gemini.text(prompt);
+      return response?.output ?? weatherData;
+    } catch (e) {
+      return weatherData;
+    }
+  }
+
+  Future<String> _formatDatabaseAnswer(String userMessage, ToolResult toolResult, String context) async {
+    if (toolResult.data == null) return 'No data available.';
+    try {
+      final table = toolResult.metadata?['table'] ?? 'database';
+      final count = toolResult.metadata?['count'] ?? 0;
+      final prompt = 'You are a helpful travel assistant.\n\nUSER: "$userMessage"\n\nRESULTS ($count from $table):\n${toolResult.data}\n\nContext: $context\n\nProvide helpful recommendations.';
+      final response = await _gemini.text(prompt);
+      return response?.output ?? toolResult.data!;
+    } catch (e) {
+      return toolResult.data!;
+    }
+  }
+
+  Future<String> _generateConversationalResponse(String userMessage, String context) async {
+    try {
+      final systemPrompt = 'You are an AI Travel Assistant for GoTravel. You can help with weather, packages, places, hotels, bookings, favorites, and payments.\n\nContext: $context\n\nUser: $userMessage';
+      final response = await _gemini.text(systemPrompt);
+      return response?.output ?? _getFallbackResponse();
+    } catch (e) {
+      return _getFallbackResponse();
+    }
+  }
+
+  String _handleToolFailure(UserIntent intent, String errorMessage) {
+    switch (intent.type) {
+      case IntentType.weather:
+        return 'Could not get weather. Please specify a location like: "What is the weather in Dhaka?"';
+      case IntentType.userData:
+        return 'Please make sure you are logged in to view your personal data.';
+      case IntentType.database:
+        return 'I had trouble finding that information.\n\nTry asking:\n${DynamicDatabaseTool.getExampleQueries()}';
+      case IntentType.conversation:
+        return _getFallbackResponse();
+    }
+  }
+
   String _extractLocation(String message) {
-    // Simple extraction - look for common location patterns
     final words = message.split(' ');
-    final commonPrepositions = ['in', 'at', 'near', 'around'];
-    
+    final prep = ['in', 'at', 'near', 'around', 'to'];
     for (int i = 0; i < words.length - 1; i++) {
-      if (commonPrepositions.contains(words[i].toLowerCase())) {
+      if (prep.contains(words[i].toLowerCase())) {
         return words[i + 1].replaceAll(RegExp(r'[^\w\s]'), '');
       }
     }
-    
     return '';
   }
 
-  String _extractCountry(String message) {
-    final lowerMessage = message.toLowerCase();
-    
-    // Common countries in the region
-    const countries = [
-      'bangladesh',
-      'india',
-      'nepal',
-      'bhutan',
-      'sri lanka',
-      'maldives',
-      'thailand',
-      'malaysia',
-      'singapore',
-    ];
-    
-    for (final country in countries) {
-      if (lowerMessage.contains(country)) {
-        return country;
-      }
-    }
-    
-    return '';
+  String _getAPIKeyError() {
+    return 'API Configuration Error\n\nThe Gemini API key is not configured properly. Please add it to your .env file.\n\nI can still help with weather information and finding tour packages.';
   }
 
-  String _extractSearchTerm(String message) {
-    // Remove common question words
-    var cleaned = message.toLowerCase()
-        .replaceAll(RegExp(r'\b(what|where|when|how|show|find|me|the|a|an|in|at)\b'), '')
-        .trim();
-    
-    return cleaned.isEmpty ? message : cleaned;
+  String _getFallbackResponse() {
+    return 'Hello! I am your AI Travel Assistant.\n\nI can help with:\n- Weather information\n- Tour packages\n- Places to visit\n- Hotels\n- Your bookings (when logged in)\n\nWhat would you like to know?';
   }
+}
+
+enum IntentType { weather, database, userData, conversation }
+
+class UserIntent {
+  final IntentType type;
+  final Map<String, dynamic> parameters;
+  UserIntent({required this.type, required this.parameters});
+  @override
+  String toString() => 'UserIntent(type: $type, parameters: $parameters)';
+}
+
+class ToolResult {
+  final bool success;
+  final String? data;
+  final String message;
+  final Map<String, dynamic>? metadata;
+  ToolResult({required this.success, required this.data, required this.message, this.metadata});
+  @override
+  String toString() => 'ToolResult(success: $success, message: $message, hasData: ${data != null})';
 }
