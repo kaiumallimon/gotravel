@@ -18,6 +18,7 @@ import 'package:gotravel/presentation/views/user/pages/place_details_page.dart';
 import 'package:gotravel/presentation/views/user/pages/user_packages_page.dart';
 import 'package:gotravel/presentation/views/user/pages/places_page.dart';
 import 'package:gotravel/presentation/views/user/pages/user_hotels_page.dart';
+import 'package:gotravel/presentation/views/user/pages/featured_packages_page.dart';
 import 'package:gotravel/presentation/views/user/pages/booking_page.dart';
 import 'package:gotravel/presentation/views/user/pages/payment_success_page.dart';
 import 'package:gotravel/presentation/views/user/pages/my_trips_page.dart';
@@ -180,6 +181,18 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: const UserPackagesPage(),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+      
+      /// Featured Packages route
+      GoRoute(
+        path: '/featured-packages',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const FeaturedPackagesPage(),
             transitionsBuilder: _slideTransition,
           );
         },

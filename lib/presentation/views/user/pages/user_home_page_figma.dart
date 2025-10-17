@@ -187,7 +187,7 @@ class _UserHomePageFigmaState extends State<UserHomePageFigma> {
                   ),
                 ),
                 TextButton.icon(
-                  onPressed: () => context.push('/packages'),
+                  onPressed: () => context.push('/featured-packages'),
                   label: Text(
                     'See all',
                     style: TextStyle(
