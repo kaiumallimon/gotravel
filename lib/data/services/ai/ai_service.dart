@@ -19,18 +19,32 @@ class AIService {
   /// Parameters:
   /// - userMessage: The user's question/query
   /// - conversationHistory: Previous messages for context (not used by backend currently)
+  /// - userId: Current user ID (optional, for personalized responses)
   /// 
   /// Returns: The AI's response text
   Future<String> chat(
     String userMessage,
-    List<Map<String, String>> conversationHistory,
-  ) async {
+    List<Map<String, String>> conversationHistory, {
+    String? userId,
+  }) async {
     try {
       print('\n🤖 === AI BACKEND CALL ===');
       print('📨 User: "$userMessage"');
+      print('👤 User ID: ${userId ?? "not provided"}');
       
       // Generate unique session ID for this conversation
       final sessionId = 'flutter_${DateTime.now().millisecondsSinceEpoch}';
+      
+      // Prepare request body
+      final requestBody = {
+        'message': userMessage,
+        'session_id': sessionId,
+      };
+      
+      // Add user_id if provided
+      if (userId != null && userId.isNotEmpty) {
+        requestBody['user_id'] = userId;
+      }
       
       // Call the backend API
       final response = await http.post(
@@ -39,10 +53,7 @@ class AIService {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({
-          'message': userMessage,
-          'session_id': sessionId,
-        }),
+        body: jsonEncode(requestBody),
       ).timeout(
         const Duration(seconds: 30),
         onTimeout: () {

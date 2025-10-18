@@ -205,46 +205,7 @@ class _AiChatPageState extends State<AiChatPage> {
             const SizedBox(height: 32),
             
             // Feature list
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    'What I Can Help With',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildFeatureItem(
-                    '🌤️ Weather Information',
-                    'Get current weather for any location',
-                    theme,
-                  ),
-                  _buildFeatureItem(
-                    '📦 Tour Packages',
-                    'Find cheapest packages and recommendations',
-                    theme,
-                  ),
-                  _buildFeatureItem(
-                    '🏞️ Places to Visit',
-                    'Discover popular tourist destinations',
-                    theme,
-                  ),
-                  _buildFeatureItem(
-                    '🏨 Hotel Recommendations',
-                    'Find the best hotels for your trip',
-                    theme,
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ]
         ),
       ),
     );

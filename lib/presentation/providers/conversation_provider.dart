@@ -3,6 +3,7 @@ import 'package:gotravel/data/models/conversation_model.dart';
 import 'package:gotravel/data/models/message_model.dart';
 import 'package:gotravel/data/services/remote/conversation_service.dart';
 import 'package:gotravel/data/services/ai/ai_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ConversationProvider with ChangeNotifier {
   final ConversationService _conversationService = ConversationService();
@@ -96,8 +97,15 @@ class ConversationProvider with ChangeNotifier {
         'content': msg.content,
       }).toList();
 
-      // Get AI response
-      final aiResponse = await _aiService.chat(content.trim(), history);
+      // Get current user ID
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+
+      // Get AI response with user ID
+      final aiResponse = await _aiService.chat(
+        content.trim(),
+        history,
+        userId: userId,
+      );
 
       // Add AI message
       final assistantMessage = await _conversationService.addMessage(
