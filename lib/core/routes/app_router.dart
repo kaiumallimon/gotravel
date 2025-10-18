@@ -20,6 +20,7 @@ import 'package:gotravel/presentation/views/user/pages/places_page.dart';
 import 'package:gotravel/presentation/views/user/pages/user_hotels_page.dart';
 import 'package:gotravel/presentation/views/user/pages/featured_packages_page.dart';
 import 'package:gotravel/presentation/views/user/pages/booking_page.dart';
+import 'package:gotravel/presentation/views/user/pages/hotel_booking_page.dart';
 import 'package:gotravel/presentation/views/user/pages/payment_success_page.dart';
 import 'package:gotravel/presentation/views/user/pages/my_trips_page.dart';
 import 'package:gotravel/presentation/views/user/pages/booking_details_page.dart';
@@ -261,7 +262,7 @@ class AppRouter {
         },
       ),
       
-      /// Booking route
+      /// Booking route (Package)
       GoRoute(
         path: '/booking/:id',
         pageBuilder: (context, state) {
@@ -269,6 +270,23 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: BookingPage(packageId: packageId),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+      
+      /// Hotel Booking route
+      GoRoute(
+        path: '/hotel-booking/:id',
+        pageBuilder: (context, state) {
+          final hotelId = state.pathParameters['id']!;
+          final roomId = state.uri.queryParameters['roomId'];
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: HotelBookingPage(
+              hotelId: hotelId,
+              roomId: roomId,
+            ),
             transitionsBuilder: _slideTransition,
           );
         },

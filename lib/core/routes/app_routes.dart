@@ -24,6 +24,7 @@ class AppRoutes {
   static const String packageDetails = '/package-details';
   static const String hotelDetails = '/hotel-details';
   static const String booking = '/booking';
+  static const String hotelBooking = '/hotel-booking';
   static const String bookingDetails = '/booking-details';
   static const String payment = '/payment';
   static const String paymentSuccess = '/payment-success';

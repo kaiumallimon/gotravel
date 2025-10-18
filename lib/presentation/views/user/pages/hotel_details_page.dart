@@ -587,12 +587,8 @@ class _HotelDetailsPageState extends State<HotelDetailsPage> {
           Expanded(
             child: FilledButton(
               onPressed: () {
-                // TODO: Navigate to booking page
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Booking feature coming soon!'),
-                  ),
-                );
+                // Navigate to hotel booking page
+                context.push('/hotel-booking/${_hotel!.id}');
               },
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
