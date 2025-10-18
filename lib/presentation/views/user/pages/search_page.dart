@@ -6,8 +6,6 @@ import 'package:gotravel/data/models/place_model.dart';
 import 'package:gotravel/data/models/tour_package_model.dart';
 import 'package:gotravel/data/models/hotel_model.dart';
 import 'package:gotravel/data/models/search_model.dart';
-import 'package:gotravel/presentation/providers/places_provider.dart';
-import 'package:gotravel/presentation/providers/user_home_provider.dart';
 import 'package:gotravel/presentation/providers/search_provider.dart';
 import 'package:gotravel/presentation/widgets/cards/place_card.dart';
 import 'package:intl/intl.dart';
@@ -103,33 +101,42 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     });
 
     try {
-      final placesProvider = Provider.of<PlacesProvider>(context, listen: false);
-      final homeProvider = Provider.of<UserHomeProvider>(context, listen: false);
-
-      // Search places
-      await placesProvider.searchPlaces(query);
-      _filteredPlaces = placesProvider.places.where((place) =>
-        place.name.toLowerCase().contains(query.toLowerCase()) ||
-        (place.description?.toLowerCase().contains(query.toLowerCase()) ?? false) ||
-        (place.category?.toLowerCase().contains(query.toLowerCase()) ?? false)
-      ).toList();
-
-      // Search packages
-      _filteredPackages = homeProvider.packages.where((package) =>
-        package.name.toLowerCase().contains(query.toLowerCase()) ||
-        package.description.toLowerCase().contains(query.toLowerCase()) ||
-        package.destination.toLowerCase().contains(query.toLowerCase())
-      ).toList();
-
-      // Search hotels
-      _filteredHotels = homeProvider.recommendedHotels.where((hotel) =>
-        hotel.name.toLowerCase().contains(query.toLowerCase()) ||
-        hotel.description.toLowerCase().contains(query.toLowerCase()) ||
-        hotel.city.toLowerCase().contains(query.toLowerCase())
-      ).toList();
+      final searchProvider = Provider.of<SearchProvider>(context, listen: false);
+      
+      // Perform search based on selected filter
+      if (_selectedFilter == 'All') {
+        await searchProvider.performGlobalSearch(query);
+        _filteredPlaces = searchProvider.placeResults;
+        _filteredPackages = searchProvider.packageResults;
+        _filteredHotels = searchProvider.hotelResults;
+      } else if (_selectedFilter == 'Places') {
+        await searchProvider.searchPlaces(query);
+        _filteredPlaces = searchProvider.placeResults;
+        _filteredPackages.clear();
+        _filteredHotels.clear();
+      } else if (_selectedFilter == 'Packages') {
+        await searchProvider.searchPackages(query);
+        _filteredPackages = searchProvider.packageResults;
+        _filteredPlaces.clear();
+        _filteredHotels.clear();
+      } else if (_selectedFilter == 'Hotels') {
+        await searchProvider.searchHotels(query);
+        _filteredHotels = searchProvider.hotelResults;
+        _filteredPlaces.clear();
+        _filteredPackages.clear();
+      }
 
     } catch (e) {
       print('Search error: $e');
+      // Show error to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Search failed: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
     } finally {
       setState(() {
         _isSearching = false;
