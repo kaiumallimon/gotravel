@@ -356,6 +356,18 @@ class SearchProvider with ChangeNotifier {
     }
   }
 
+  // Delete individual search history item
+  Future<void> deleteSearchHistoryItem(String searchHistoryId) async {
+    try {
+      await _searchService.deleteSearchHistoryItem(searchHistoryId);
+      _searchHistory.removeWhere((item) => item.id == searchHistoryId);
+      notifyListeners();
+    } catch (e) {
+      _setError(e.toString());
+      throw e;
+    }
+  }
+
   // Search from history
   Future<void> searchFromHistory(SearchHistoryModel historyItem) async {
     if (historyItem.searchFilters != null) {

@@ -1,12 +1,16 @@
 ﻿import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:gotravel/data/models/place_model.dart';
 import 'package:gotravel/data/models/tour_package_model.dart';
 import 'package:gotravel/data/models/hotel_model.dart';
+import 'package:gotravel/data/models/search_model.dart';
 import 'package:gotravel/presentation/providers/places_provider.dart';
 import 'package:gotravel/presentation/providers/user_home_provider.dart';
+import 'package:gotravel/presentation/providers/search_provider.dart';
 import 'package:gotravel/presentation/widgets/cards/place_card.dart';
+import 'package:intl/intl.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -65,6 +69,10 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _searchFocusNode.requestFocus();
       _animationController.forward();
+      
+      // Load search history
+      final searchProvider = Provider.of<SearchProvider>(context, listen: false);
+      searchProvider.loadSearchHistory();
     });
   }
 
@@ -244,37 +252,359 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   }
 
   Widget _buildInitialContent(ThemeData theme) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Popular Categories',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          
-          // Popular categories grid
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 3,
+    return Consumer<SearchProvider>(
+      builder: (context, searchProvider, child) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildCategoryItem('Adventure', CupertinoIcons.location_solid, Colors.green, theme),
-              _buildCategoryItem('Beach', CupertinoIcons.sun_max, Colors.orange, theme),
-              _buildCategoryItem('Cultural', CupertinoIcons.building_2_fill, Colors.purple, theme),
-              _buildCategoryItem('Mountain', CupertinoIcons.triangle, Colors.blue, theme),
+              // Search History Section
+              if (searchProvider.searchHistory.isNotEmpty) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Recent Searches',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Clear Search History'),
+                            content: const Text('Are you sure you want to clear all search history?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(true),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.red,
+                                ),
+                                child: const Text('Clear All'),
+                              ),
+                            ],
+                          ),
+                        );
+                        
+                        if (confirmed == true) {
+                          await searchProvider.clearSearchHistory();
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Search history cleared'),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      child: Text(
+                        'Clear All',
+                        style: TextStyle(
+                          color: theme.colorScheme.error,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ...searchProvider.searchHistory.take(5).map((historyItem) {
+                  return _buildSearchHistoryItem(historyItem, theme, searchProvider);
+                }),
+                const SizedBox(height: 24),
+              ],
+              
+              // Popular Categories
+              Text(
+                'Popular Categories',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Popular categories grid
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 3,
+                children: [
+                  _buildCategoryItem('Adventure', CupertinoIcons.location_solid, Colors.green, theme),
+                  _buildCategoryItem('Beach', CupertinoIcons.sun_max, Colors.orange, theme),
+                  _buildCategoryItem('Cultural', CupertinoIcons.building_2_fill, Colors.purple, theme),
+                  _buildCategoryItem('Mountain', CupertinoIcons.triangle, Colors.blue, theme),
+                ],
+              ),
             ],
           ),
-        ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSearchHistoryItem(SearchHistoryModel historyItem, ThemeData theme, SearchProvider searchProvider) {
+    final timeAgo = _getTimeAgo(historyItem.createdAt);
+    
+    return Dismissible(
+      key: Key(historyItem.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.error,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          CupertinoIcons.delete,
+          color: theme.colorScheme.onError,
+        ),
+      ),
+      confirmDismiss: (direction) async {
+        return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Delete Search History'),
+            content: Text('Delete "${historyItem.searchQuery}" from history?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.red,
+                ),
+                child: const Text('Delete'),
+              ),
+            ],
+          ),
+        );
+      },
+      onDismissed: (direction) async {
+        try {
+          await searchProvider.deleteSearchHistoryItem(historyItem.id);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Search history deleted'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to delete: $e'),
+                backgroundColor: theme.colorScheme.error,
+              ),
+            );
+          }
+        }
+      },
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 8),
+        child: ListTile(
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              _getSearchTypeIcon(historyItem.searchType),
+              color: theme.colorScheme.primary,
+              size: 20,
+            ),
+          ),
+          title: Text(
+            historyItem.searchQuery,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Row(
+            children: [
+              if (historyItem.searchType != null) ...[
+                Text(
+                  _getSearchTypeLabel(historyItem.searchType),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const Text(' • '),
+              ],
+              Text(
+                timeAgo,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              if (historyItem.resultsCount > 0) ...[
+                const Text(' • '),
+                Text(
+                  '${historyItem.resultsCount} results',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // If there was a clicked item, show navigation button
+              if (historyItem.clickedItemId != null && historyItem.clickedItemType != null)
+                IconButton(
+                  icon: Icon(
+                    CupertinoIcons.arrow_right_circle,
+                    color: theme.colorScheme.primary,
+                  ),
+                  onPressed: () {
+                    _navigateToDetailPage(
+                      historyItem.clickedItemId!,
+                      historyItem.clickedItemType!,
+                    );
+                  },
+                  tooltip: 'Go to ${historyItem.clickedItemType}',
+                ),
+              IconButton(
+                icon: Icon(
+                  CupertinoIcons.delete,
+                  color: theme.colorScheme.error,
+                  size: 20,
+                ),
+                onPressed: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Delete Search History'),
+                      content: Text('Delete "${historyItem.searchQuery}" from history?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.red,
+                          ),
+                          child: const Text('Delete'),
+                        ),
+                      ],
+                    ),
+                  );
+                  
+                  if (confirmed == true) {
+                    try {
+                      await searchProvider.deleteSearchHistoryItem(historyItem.id);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Search history deleted'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to delete: $e'),
+                            backgroundColor: theme.colorScheme.error,
+                          ),
+                        );
+                      }
+                    }
+                  }
+                },
+              ),
+            ],
+          ),
+          onTap: () {
+            // Perform search again with the same query
+            _searchController.text = historyItem.searchQuery;
+            _performSearch(historyItem.searchQuery);
+          },
+        ),
       ),
     );
+  }
+
+  IconData _getSearchTypeIcon(String? searchType) {
+    switch (searchType) {
+      case 'places':
+        return CupertinoIcons.map;
+      case 'packages':
+        return CupertinoIcons.bag;
+      case 'hotels':
+        return CupertinoIcons.building_2_fill;
+      default:
+        return CupertinoIcons.search;
+    }
+  }
+
+  String _getSearchTypeLabel(String? searchType) {
+    switch (searchType) {
+      case 'places':
+        return 'Places';
+      case 'packages':
+        return 'Packages';
+      case 'hotels':
+        return 'Hotels';
+      case 'global':
+        return 'All';
+      default:
+        return 'Search';
+    }
+  }
+
+  String _getTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+    
+    if (difference.inDays > 7) {
+      return DateFormat('MMM d').format(dateTime);
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
+
+  void _navigateToDetailPage(String itemId, String itemType) {
+    switch (itemType) {
+      case 'package':
+        context.push('/package-details/$itemId');
+        break;
+      case 'hotel':
+        context.push('/hotel-details/$itemId');
+        break;
+      case 'place':
+        context.push('/place-details/$itemId');
+        break;
+    }
   }
 
   Widget _buildSearchResults(ThemeData theme) {
@@ -383,7 +713,17 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             final place = _filteredPlaces[index];
             return Padding(
               padding: const EdgeInsets.only(bottom: 16),
-              child: PlaceCard(place: place),
+              child: PlaceCard(
+                place: place,
+                onTap: () {
+                  // Track search click
+                  final searchProvider = Provider.of<SearchProvider>(context, listen: false);
+                  searchProvider.trackSearchClick(place.id, 'place');
+                  
+                  // Navigate to place details
+                  context.push('/place-details/${place.id}');
+                },
+              ),
             );
           },
         ),
@@ -461,7 +801,12 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         ),
         trailing: const Icon(CupertinoIcons.chevron_right),
         onTap: () {
+          // Track search click
+          final searchProvider = Provider.of<SearchProvider>(context, listen: false);
+          searchProvider.trackSearchClick(package.id, 'package');
+          
           // Navigate to package details
+          context.push('/package-details/${package.id}');
         },
       ),
     );
@@ -519,7 +864,12 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         ),
         trailing: const Icon(CupertinoIcons.chevron_right),
         onTap: () {
+          // Track search click
+          final searchProvider = Provider.of<SearchProvider>(context, listen: false);
+          searchProvider.trackSearchClick(hotel.id, 'hotel');
+          
           // Navigate to hotel details
+          context.push('/hotel-details/${hotel.id}');
         },
       ),
     );

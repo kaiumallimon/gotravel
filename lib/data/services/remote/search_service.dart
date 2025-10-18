@@ -307,6 +307,18 @@ class SearchService {
     }
   }
 
+  /// Delete individual search history item
+  Future<void> deleteSearchHistoryItem(String searchHistoryId) async {
+    try {
+      await _supabase
+          .from('search_history')
+          .delete()
+          .eq('id', searchHistoryId);
+    } catch (e) {
+      throw Exception('Failed to delete search history item: $e');
+    }
+  }
+
   /// Get search analytics for admin
   Future<Map<String, dynamic>> getSearchAnalytics() async {
     try {
