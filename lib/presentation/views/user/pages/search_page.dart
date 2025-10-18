@@ -2,12 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:gotravel/data/models/place_model.dart';
-import 'package:gotravel/data/models/tour_package_model.dart';
-import 'package:gotravel/data/models/hotel_model.dart';
+import 'package:gotravel/core/routes/app_routes.dart';
 import 'package:gotravel/data/models/search_model.dart';
 import 'package:gotravel/presentation/providers/search_provider.dart';
-import 'package:gotravel/presentation/widgets/cards/place_card.dart';
+// Removed inline result cards; results are shown on SearchResultsPage
 import 'package:intl/intl.dart';
 
 class SearchPage extends StatefulWidget {
@@ -27,11 +25,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   late Animation<Offset> _slideAnimation;
   
   String _selectedFilter = 'All';
-  List<PlaceModel> _filteredPlaces = [];
-  List<TourPackage> _filteredPackages = [];
-  List<Hotel> _filteredHotels = [];
-  bool _hasSearched = false;
-  bool _isSearching = false;
+  // Inline result state removed; navigation-based results
   
   final List<String> _filterOptions = ['All', 'Packages', 'Places', 'Hotels'];
 
@@ -45,7 +39,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
       vsync: this,
     );
     
-    _filterTabController = TabController(length: _filterOptions.length, vsync: this);
+  _filterTabController = TabController(length: _filterOptions.length, vsync: this);
     
     _fadeAnimation = Tween<double>(
       begin: 0.0,
@@ -83,65 +77,13 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  void _performSearch(String query) async {
-    if (query.trim().isEmpty) {
-      setState(() {
-        _filteredPlaces.clear();
-        _filteredPackages.clear();
-        _filteredHotels.clear();
-        _hasSearched = false;
-        _isSearching = false;
-      });
-      return;
-    }
-
-    setState(() {
-      _isSearching = true;
-      _hasSearched = true;
-    });
-
-    try {
-      final searchProvider = Provider.of<SearchProvider>(context, listen: false);
-      
-      // Perform search based on selected filter
-      if (_selectedFilter == 'All') {
-        await searchProvider.performGlobalSearch(query);
-        _filteredPlaces = searchProvider.placeResults;
-        _filteredPackages = searchProvider.packageResults;
-        _filteredHotels = searchProvider.hotelResults;
-      } else if (_selectedFilter == 'Places') {
-        await searchProvider.searchPlaces(query);
-        _filteredPlaces = searchProvider.placeResults;
-        _filteredPackages.clear();
-        _filteredHotels.clear();
-      } else if (_selectedFilter == 'Packages') {
-        await searchProvider.searchPackages(query);
-        _filteredPackages = searchProvider.packageResults;
-        _filteredPlaces.clear();
-        _filteredHotels.clear();
-      } else if (_selectedFilter == 'Hotels') {
-        await searchProvider.searchHotels(query);
-        _filteredHotels = searchProvider.hotelResults;
-        _filteredPlaces.clear();
-        _filteredPackages.clear();
-      }
-
-    } catch (e) {
-      print('Search error: $e');
-      // Show error to user
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Search failed: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
-    } finally {
-      setState(() {
-        _isSearching = false;
-      });
-    }
+  void _goToResults([String? overrideQuery, String? overrideFilter]) {
+    final query = (overrideQuery ?? _searchController.text).trim();
+    if (query.isEmpty) return;
+    final filter = overrideFilter ?? _selectedFilter;
+    final q = Uri.encodeComponent(query);
+    final f = Uri.encodeComponent(filter);
+    context.push('${AppRoutes.searchResults}?q=$q&filter=$f');
   }
 
   @override
@@ -155,51 +97,61 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         elevation: 0,
         title: FadeTransition(
           opacity: _fadeAnimation,
-          child: Container(
-            height: 40,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: TextField(
-              controller: _searchController,
-              focusNode: _searchFocusNode,
-              decoration: InputDecoration(
-                hintText: 'Search places, packages, hotels...',
-                hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                prefixIcon: Icon(
-                  CupertinoIcons.search,
-                  color: theme.colorScheme.onSurfaceVariant,
-                  size: 20,
-                ),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        onPressed: () {
-                          _searchController.clear();
-                          _performSearch('');
-                        },
-                        icon: Icon(
-                          CupertinoIcons.xmark_circle_fill,
-                          color: theme.colorScheme.onSurfaceVariant,
-                          size: 18,
-                        ),
-                      )
-                    : null,
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+          child: Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    decoration: InputDecoration(
+                      hintText: 'Search places, packages, hotels...',
+                      hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      prefixIcon: Icon(
+                        CupertinoIcons.search,
+                        color: theme.colorScheme.onSurfaceVariant,
+                        size: 20,
+                      ),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _searchController.clear();
+                                });
+                              },
+                              icon: Icon(
+                                CupertinoIcons.xmark_circle_fill,
+                                color: theme.colorScheme.onSurfaceVariant,
+                                size: 18,
+                              ),
+                            )
+                          : null,
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                    ),
+                    onChanged: (_) => setState(() {}),
+                    onSubmitted: (_) => _goToResults(),
+                  ),
                 ),
               ),
-              onChanged: (value) {
-                _performSearch(value);
-              },
-              onSubmitted: (value) {
-                _performSearch(value);
-              },
-            ),
+              const SizedBox(width: 8),
+              FilledButton.icon(
+                onPressed: _goToResults,
+                icon: const Icon(CupertinoIcons.search),
+                label: const Text('Search'),
+                style: FilledButton.styleFrom(minimumSize: const Size(0, 40)),
+              ),
+            ],
           ),
         ),
         automaticallyImplyLeading: false,
@@ -210,52 +162,15 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
           position: _slideAnimation,
           child: Column(
             children: [
-              // Filter Tabs
-              if (_hasSearched) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: TabBar(
-                    controller: _filterTabController,
-                    isScrollable: true,
-                    labelColor: theme.colorScheme.primary,
-                    unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
-                    indicatorColor: theme.colorScheme.primary,
-                    labelStyle: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                    unselectedLabelStyle: theme.textTheme.titleSmall,
-                    tabs: _filterOptions.map((filter) => Tab(text: filter)).toList(),
-                    onTap: (index) {
-                      setState(() {
-                        _selectedFilter = _filterOptions[index];
-                      });
-                    },
-                  ),
-                ),
-                const Divider(height: 1),
-              ],
-              
-              // Content
+              // Content: only initial content on this page
               Expanded(
-                child: _buildSearchContent(theme),
+                child: _buildInitialContent(theme),
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  Widget _buildSearchContent(ThemeData theme) {
-    if (!_hasSearched) {
-      return _buildInitialContent(theme);
-    }
-
-    if (_isSearching) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return _buildSearchResults(theme);
   }
 
   Widget _buildInitialContent(ThemeData theme) {
@@ -546,9 +461,8 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             ],
           ),
           onTap: () {
-            // Perform search again with the same query
             _searchController.text = historyItem.searchQuery;
-            _performSearch(historyItem.searchQuery);
+            _goToResults(historyItem.searchQuery, _mapHistoryTypeToFilter(historyItem.searchType));
           },
         ),
       ),
@@ -614,279 +528,24 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     }
   }
 
-  Widget _buildSearchResults(ThemeData theme) {
-    final totalResults = _filteredPlaces.length + _filteredPackages.length + _filteredHotels.length;
-    
-    if (totalResults == 0) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              CupertinoIcons.search,
-              size: 64,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No results found',
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Try searching for something else',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      );
+  String _mapHistoryTypeToFilter(String? searchType) {
+    switch (searchType) {
+      case 'places':
+        return 'Places';
+      case 'packages':
+        return 'Packages';
+      case 'hotels':
+        return 'Hotels';
+      default:
+        return 'All';
     }
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '$totalResults results found',
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 16),
-          
-          if (_selectedFilter == 'All' || _selectedFilter == 'Packages')
-            _buildPackagesSection(theme),
-          
-          if (_selectedFilter == 'All' || _selectedFilter == 'Places')
-            _buildPlacesSection(theme),
-          
-          if (_selectedFilter == 'All' || _selectedFilter == 'Hotels')
-            _buildHotelsSection(theme),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPackagesSection(ThemeData theme) {
-    if (_filteredPackages.isEmpty) return const SizedBox();
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Packages (${_filteredPackages.length})',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _filteredPackages.length,
-          itemBuilder: (context, index) {
-            final package = _filteredPackages[index];
-            return _buildPackageCard(package, theme);
-          },
-        ),
-        const SizedBox(height: 24),
-      ],
-    );
-  }
-
-  Widget _buildPlacesSection(ThemeData theme) {
-    if (_filteredPlaces.isEmpty) return const SizedBox();
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Places (${_filteredPlaces.length})',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _filteredPlaces.length,
-          itemBuilder: (context, index) {
-            final place = _filteredPlaces[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: PlaceCard(
-                place: place,
-                onTap: () {
-                  // Track search click
-                  final searchProvider = Provider.of<SearchProvider>(context, listen: false);
-                  searchProvider.trackSearchClick(place.id, 'place');
-                  
-                  // Navigate to place details
-                  context.push('/place-details/${place.id}');
-                },
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 24),
-      ],
-    );
-  }
-
-  Widget _buildHotelsSection(ThemeData theme) {
-    if (_filteredHotels.isEmpty) return const SizedBox();
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Hotels (${_filteredHotels.length})',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _filteredHotels.length,
-          itemBuilder: (context, index) {
-            final hotel = _filteredHotels[index];
-            return _buildHotelCard(hotel, theme);
-          },
-        ),
-        const SizedBox(height: 24),
-      ],
-    );
-  }
-
-  Widget _buildPackageCard(TourPackage package, ThemeData theme) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            color: theme.colorScheme.primary.withOpacity(0.1),
-          ),
-          child: Icon(
-            CupertinoIcons.bag,
-            color: theme.colorScheme.primary,
-          ),
-        ),
-        title: Text(
-          package.name,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              package.destination,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            Text(
-              '\$${package.price.toStringAsFixed(0)}',
-              style: theme.textTheme.titleSmall?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        trailing: const Icon(CupertinoIcons.chevron_right),
-        onTap: () {
-          // Track search click
-          final searchProvider = Provider.of<SearchProvider>(context, listen: false);
-          searchProvider.trackSearchClick(package.id, 'package');
-          
-          // Navigate to package details
-          context.push('/package-details/${package.id}');
-        },
-      ),
-    );
-  }
-
-  Widget _buildHotelCard(Hotel hotel, ThemeData theme) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            color: theme.colorScheme.secondary.withOpacity(0.1),
-          ),
-          child: Icon(
-            CupertinoIcons.building_2_fill,
-            color: theme.colorScheme.secondary,
-          ),
-        ),
-        title: Text(
-          hotel.name,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${hotel.city}, ${hotel.country}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            Row(
-              children: [
-                ...List.generate(
-                  hotel.rating.toInt(),
-                  (index) => Icon(
-                    CupertinoIcons.star_fill,
-                    size: 12,
-                    color: Colors.amber,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  hotel.rating.toString(),
-                  style: theme.textTheme.bodySmall,
-                ),
-              ],
-            ),
-          ],
-        ),
-        trailing: const Icon(CupertinoIcons.chevron_right),
-        onTap: () {
-          // Track search click
-          final searchProvider = Provider.of<SearchProvider>(context, listen: false);
-          searchProvider.trackSearchClick(hotel.id, 'hotel');
-          
-          // Navigate to hotel details
-          context.push('/hotel-details/${hotel.id}');
-        },
-      ),
-    );
   }
 
   Widget _buildCategoryItem(String label, IconData icon, Color color, ThemeData theme) {
     return GestureDetector(
       onTap: () {
         _searchController.text = label;
-        _performSearch(label);
+        _goToResults(label, 'All');
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

@@ -30,6 +30,7 @@ import 'package:gotravel/presentation/views/welcome/welcome_page.dart';
 
 import 'package:gotravel/presentation/views/auth/sign_in_page.dart';
 import 'package:gotravel/presentation/views/auth/sign_up_page.dart';
+import 'package:gotravel/presentation/views/user/pages/search_results_page.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -218,6 +219,20 @@ class AppRouter {
           return CustomTransitionPage(
             key: state.pageKey,
             child: const UserHotelsPage(),
+            transitionsBuilder: _slideTransition,
+          );
+        },
+      ),
+
+      /// Search results route (query + filter params)
+      GoRoute(
+        path: AppRoutes.searchResults,
+        pageBuilder: (context, state) {
+          final q = state.uri.queryParameters['q'] ?? '';
+          final filter = state.uri.queryParameters['filter'] ?? 'All';
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: SearchResultsPage(query: q, initialFilter: filter),
             transitionsBuilder: _slideTransition,
           );
         },
